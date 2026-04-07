@@ -4,9 +4,10 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { Sidebar } from "@/components/Sidebar";
+import { ClientUsingCoachDashboardScreen } from "@/components/ClientUsingCoachDashboardScreen";
 
 function DashboardGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -28,6 +29,10 @@ function DashboardGuard({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     );
+  }
+
+  if (profile?.role === "client") {
+    return <ClientUsingCoachDashboardScreen />;
   }
 
   return (

@@ -29,6 +29,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { data: coachProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("role")
+    .eq("id", coach.id)
+    .maybeSingle();
+
+  if (!coachProfile || coachProfile.role !== "coach") {
+    return NextResponse.json(
+      { error: "Only coaches can add clients" },
+      { status: 403 }
+    );
+  }
+
   const { name, email, startDate } = await req.json();
   if (!name || !email) {
     return NextResponse.json({ error: "Name and email required" }, { status: 400 });

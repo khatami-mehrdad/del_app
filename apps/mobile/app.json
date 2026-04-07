@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.saharshams.del"
+      "bundleIdentifier": "com.saharshams.del",
+      "associatedDomains": [
+        "applinks:del-app-web.vercel.app"
+      ]
     },
     "android": {
       "package": "com.saharshams.del",
@@ -29,6 +32,23 @@
         "RECORD_AUDIO",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "del-app-web.vercel.app",
+              "pathPrefix": "/client-invite"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ]
     },
     "web": {

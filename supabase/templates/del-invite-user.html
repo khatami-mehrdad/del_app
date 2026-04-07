@@ -3,7 +3,7 @@
   Subject: Welcome to del — You're invited
 
   Also set Site URL + Redirect URLs to your production web URL (not localhost),
-  or links in emails will point at localhost. Allow /auth/callback (invite redirect).
+  or links in emails will point at localhost. Allow /client-invite for mobile-first onboarding.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -95,11 +95,11 @@
                     color: rgba(247, 242, 234, 0.72);
                   "
                 >
-                  Your coach added you to del. Accept this invite to set your password
-                  and open the companion app.
+                  Your coach added you to del. Open this invite on your phone to finish
+                  setting up the companion app.
                 </p>
                 <a
-                  href="{{ .ConfirmationURL }}"
+                  href="{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}/client-invite{{ end }}?token_hash={{ .TokenHash }}&type=invite"
                   style="
                     display: inline-block;
                     padding: 14px 28px;
@@ -116,7 +116,7 @@
                     text-decoration: none;
                     color: #ffffff;
                   "
-                  >Accept your invite</a
+                  >Open companion app</a
                 >
               </td>
             </tr>

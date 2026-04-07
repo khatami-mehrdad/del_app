@@ -45,6 +45,10 @@ export default function LoginScreen() {
       <View style={styles.inner}>
         <Text style={styles.logo}>del</Text>
         <Text style={styles.subtitle}>Companion App</Text>
+        <Text style={styles.helper}>
+          New here? Open your invite email on this phone to finish setting up your
+          client account.
+        </Text>
 
         <TextInput
           style={styles.input}
@@ -103,7 +107,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: 'rgba(255,255,255,0.2)',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 16,
+  },
+  helper: {
+    fontFamily: fonts.sans.light,
+    fontSize: 12,
+    lineHeight: 18,
+    color: 'rgba(255,255,255,0.42)',
+    textAlign: 'center',
+    marginBottom: 24,
   },
   input: {
     backgroundColor: 'rgba(255,255,255,0.05)',

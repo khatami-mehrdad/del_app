@@ -30,23 +30,41 @@ void SplashScreen.preventAutoHideAsync().catch(() => {
 });
 
 function AuthGate() {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
-    const inAuth = segments[0] === 'login';
-    if (!user && !inAuth) {
+    const current = String(segments[0] ?? '');
+    const inLogin = current === 'login';
+    const inInvite = current === 'client-invite';
+    const inCoachOnly = current === 'coach-only';
+
+    if (!user && !inLogin && !inInvite) {
       router.replace('/login');
-    } else if (user && inAuth) {
+      return;
+    }
+
+    if (!user || !profile) return;
+
+    if (profile.role === 'coach') {
+      if (!inCoachOnly && !inInvite) {
+        router.replace('/coach-only' as never);
+      }
+      return;
+    }
+
+    if (inLogin || inCoachOnly) {
       router.replace('/(tabs)');
     }
-  }, [user, loading, segments]);
+  }, [user, loading, profile, segments, router]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="coach-only" />
+      <Stack.Screen name="client-invite" />
       <Stack.Screen name="login" options={{ presentation: 'modal' }} />
     </Stack>
   );

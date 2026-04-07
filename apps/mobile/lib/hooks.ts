@@ -43,7 +43,7 @@ export function useWeekCheckins(programId: string | undefined) {
       .select('*')
       .eq('program_id', programId)
       .gte('checkin_date', mondayStr)
-      .order('checkin_date', { ascending: true });
+      .order('created_at', { ascending: false });
 
     setCheckins((data as CheckIn[]) ?? []);
     setLoading(false);
@@ -144,18 +144,15 @@ export async function submitCheckin(
     }
   }
 
-  const { error } = await supabase.from('checkins').upsert(
-    {
-      program_id: programId,
-      client_id: clientId,
-      content_text: text,
-      practice_completed: practiceCompleted,
-      checkin_date: today,
-      voice_note_url: voiceUrl,
-      voice_note_duration_sec: voiceDuration ?? null,
-    },
-    { onConflict: 'program_id,checkin_date' }
-  );
+  const { error } = await supabase.from('checkins').insert({
+    program_id: programId,
+    client_id: clientId,
+    content_text: text,
+    practice_completed: practiceCompleted,
+    checkin_date: today,
+    voice_note_url: voiceUrl,
+    voice_note_duration_sec: voiceDuration ?? null,
+  });
   return { error: error?.message ?? null };
 }
 
@@ -164,15 +161,30 @@ export async function markPracticeDone(
   clientId: string
 ) {
   const today = new Date().toISOString().split('T')[0];
-  const { error } = await supabase.from('checkins').upsert(
-    {
-      program_id: programId,
-      client_id: clientId,
-      practice_completed: true,
-      checkin_date: today,
-    },
-    { onConflict: 'program_id,checkin_date' }
-  );
+
+  const { data: existing } = await supabase
+    .from('checkins')
+    .select('id')
+    .eq('program_id', programId)
+    .eq('checkin_date', today)
+    .eq('practice_completed', false)
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from('checkins')
+      .update({ practice_completed: true })
+      .eq('id', existing.id);
+    return { error: error?.message ?? null };
+  }
+
+  const { error } = await supabase.from('checkins').insert({
+    program_id: programId,
+    client_id: clientId,
+    practice_completed: true,
+    checkin_date: today,
+  });
   return { error: error?.message ?? null };
 }
 

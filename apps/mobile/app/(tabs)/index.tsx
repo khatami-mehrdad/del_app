@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts } from '@/lib/theme';
@@ -64,7 +65,7 @@ export default function HomeScreen() {
     if (!program || !user) return;
     if (!checkinText.trim() && !voice.uri) return;
     setSending(true);
-    await submitCheckin(
+    const result = await submitCheckin(
       program.id,
       user.id,
       checkinText.trim() || null,
@@ -72,12 +73,16 @@ export default function HomeScreen() {
       voice.uri ?? undefined,
       voice.uri ? voice.duration : undefined
     );
+    setSending(false);
+    if (result.error) {
+      Alert.alert('Check-in failed', result.error);
+      return;
+    }
     setCheckinText('');
     voice.reset();
-    setSending(false);
     setJustSent(true);
     setTimeout(() => setJustSent(false), 3000);
-    refetchCheckins();
+    await refetchCheckins();
   }
 
   if (!profile || !program) {
@@ -203,18 +208,23 @@ export default function HomeScreen() {
         </View>
 
         {/* This week's check-in history */}
-        {checkins.filter((c) => c.content_text).length > 0 && (
+        {checkins.filter((c) => c.content_text || c.voice_note_url).length > 0 && (
           <View style={styles.historyCard}>
             <Text style={styles.historyTitle}>Your check-ins this week</Text>
             {checkins
-              .filter((c) => c.content_text)
+              .filter((c) => c.content_text || c.voice_note_url)
               .map((c) => {
-                const d = new Date(c.checkin_date + 'T00:00:00');
+                const d = new Date(c.created_at);
                 const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+                const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                 return (
                   <View key={c.id} style={styles.historyItem}>
-                    <Text style={styles.historyDay}>{dayName}</Text>
-                    <Text style={styles.historyText}>"{c.content_text}"</Text>
+                    <Text style={styles.historyDay}>{dayName} · {time}</Text>
+                    <Text style={styles.historyText}>
+                      {c.content_text
+                        ? `"${c.content_text}"`
+                        : `Voice note · ${Math.floor((c.voice_note_duration_sec ?? 0) / 60)}:${String((c.voice_note_duration_sec ?? 0) % 60).padStart(2, '0')}`}
+                    </Text>
                   </View>
                 );
               })}

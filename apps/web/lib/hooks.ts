@@ -108,7 +108,7 @@ export function useCheckins(programId: string | null) {
       .select("*")
       .eq("program_id", programId)
       .gte("checkin_date", mondayStr)
-      .order("checkin_date", { ascending: true })
+      .order("created_at", { ascending: false })
       .then(({ data }) => {
         setCheckins((data as CheckIn[]) ?? []);
         setLoading(false);

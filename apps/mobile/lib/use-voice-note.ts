@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { Alert, Platform } from 'react-native';
 import { Audio } from 'expo-av';
 
 export function useVoiceNote() {
@@ -10,18 +11,25 @@ export function useVoiceNote() {
 
   async function startRecording() {
     try {
-      const { granted } = await Audio.requestPermissionsAsync();
-      if (!granted) return;
+      const perm = await Audio.requestPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          'Microphone access needed',
+          'Please allow microphone access in your device settings to record voice notes.'
+        );
+        return;
+      }
 
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
 
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      recordingRef.current = recording;
+      const rec = new Audio.Recording();
+      await rec.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+      await rec.startAsync();
+
+      recordingRef.current = rec;
       setRecording(true);
       setDuration(0);
       setUri(null);
@@ -29,8 +37,8 @@ export function useVoiceNote() {
       timerRef.current = setInterval(() => {
         setDuration((d) => d + 1);
       }, 1000);
-    } catch (err) {
-      console.error('Failed to start recording:', err);
+    } catch (err: any) {
+      Alert.alert('Recording failed', err?.message ?? 'Unknown error');
     }
   }
 
@@ -43,13 +51,20 @@ export function useVoiceNote() {
     }
 
     setRecording(false);
-    await recordingRef.current.stopAndUnloadAsync();
-    await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
 
-    const fileUri = recordingRef.current.getURI();
-    recordingRef.current = null;
-    setUri(fileUri);
-    return fileUri;
+    try {
+      await recordingRef.current.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+
+      const fileUri = recordingRef.current.getURI();
+      recordingRef.current = null;
+      setUri(fileUri);
+      return fileUri;
+    } catch (err: any) {
+      Alert.alert('Stop recording failed', err?.message ?? 'Unknown error');
+      recordingRef.current = null;
+      return null;
+    }
   }
 
   function reset() {

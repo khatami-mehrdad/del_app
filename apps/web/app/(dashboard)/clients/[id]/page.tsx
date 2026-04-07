@@ -112,12 +112,13 @@ export default function ClientDetailPage() {
           ) : (
             <div className="divide-y divide-cream-mid">
               {checkins.map((ci) => {
-                const date = new Date(ci.checkin_date + "T00:00:00");
-                const dayName = dayNames[date.getDay()];
+                const created = new Date(ci.created_at);
+                const dayName = dayNames[created.getDay()];
+                const time = created.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
                 return (
                   <div key={ci.id} className="py-4 first:pt-0 last:pb-0">
                     <p className="font-sans font-light text-xs tracking-[0.15em] uppercase text-brown-light mb-1">
-                      {dayName}
+                      {dayName} · {time}
                     </p>
                     <p className="font-sans font-light text-base text-brown-mid leading-relaxed">
                       {ci.voice_note_url

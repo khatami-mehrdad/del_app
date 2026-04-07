@@ -50,7 +50,7 @@ CREATE TABLE checkins (
   practice_completed      boolean NOT NULL DEFAULT false,
   checkin_date            date NOT NULL,
   created_at              timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT unique_checkin_per_day UNIQUE (program_id, checkin_date)
+  -- Multiple check-ins per day allowed
 );
 
 CREATE TABLE messages (

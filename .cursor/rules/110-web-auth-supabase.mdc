@@ -1,0 +1,14 @@
+---
+description: Supabase and auth safety rules for the web app
+globs: apps/web/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Web Auth And Supabase
+
+- Browser code may use the public Supabase client and public env vars only.
+- Never expose `SUPABASE_SERVICE_ROLE_KEY` to client code, shared packages consumed by the client, or browser-visible logs.
+- Server-only admin operations belong in route handlers or server-only modules.
+- The web app depends on `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and server-side admin flows also depend on `SUPABASE_SERVICE_ROLE_KEY`.
+- When changing auth flows, avoid logged-out experiences that render `null` or blank screens before redirecting.
+- Respect Supabase RLS assumptions when changing queries, inserts, and updates.

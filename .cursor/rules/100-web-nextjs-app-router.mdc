@@ -1,0 +1,14 @@
+---
+description: Next.js App Router conventions for the web dashboard
+globs: apps/web/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Web Next.js Rules
+
+- This app uses Next.js App Router patterns only.
+- Prefer Server Components by default. Add `"use client"` only when state, effects, browser APIs, or client navigation are required.
+- Follow route conventions for `app/`, `layout.tsx`, `page.tsx`, and route handlers instead of inventing custom structure.
+- Keep auth and routing UX explicit. Prefer server-side redirects when they avoid client-side blank states.
+- Match existing dashboard code style before introducing new patterns or libraries.
+- Respect existing visual language: warm, editorial, restrained, and not generic SaaS styling.

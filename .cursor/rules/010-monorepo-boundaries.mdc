@@ -1,0 +1,14 @@
+---
+description: Monorepo boundaries and shared ownership conventions
+alwaysApply: true
+---
+
+# Monorepo Boundaries
+
+- `apps/web` is the coach dashboard.
+- `apps/mobile` is the client companion app.
+- `packages/shared` holds shared product types and contracts.
+- `packages/supabase-client` holds shared Supabase client helpers and generated database types.
+- Put cross-app domain logic in shared packages when it is truly reused; avoid copy-pasting logic between web and mobile.
+- Do not move app-specific UI, routing, or platform behavior into shared packages.
+- When changing shared contracts, think through impact on both web and mobile before editing.

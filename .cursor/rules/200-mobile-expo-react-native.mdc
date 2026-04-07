@@ -1,0 +1,14 @@
+---
+description: Expo and React Native conventions for the mobile app
+globs: apps/mobile/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Mobile Expo Rules
+
+- Treat `apps/mobile` as an Expo and React Native app, not a web app.
+- Do not introduce web-only APIs or DOM assumptions into mobile code.
+- Preserve existing app flows for practice, check-ins, messages, and journey features.
+- Reuse shared types and Supabase helpers where appropriate instead of redefining data models.
+- Keep mobile interactions simple and resilient around loading, auth state, and network failures.
+- Prefer patterns that fit Expo routing and React Native components already used in the app.

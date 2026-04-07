@@ -1,0 +1,14 @@
+---
+description: Supabase schema, migration, and RLS rules
+globs: supabase/**/*.sql
+alwaysApply: false
+---
+
+# Supabase Schema And RLS
+
+- Treat migrations as production schema history; prefer additive, explicit changes over destructive rewrites.
+- Preserve or intentionally update RLS whenever schema changes affect data access.
+- Think through impact on `profiles`, `programs`, `practices`, `checkins`, `messages`, `journey_entries`, and `push_tokens`.
+- Keep auth-trigger behavior in mind when changing user creation or profile assumptions.
+- If realtime tables or storage policies are affected, update them deliberately in the same migration when needed.
+- Write SQL that is readable and safe to review, with comments only where the intent is not obvious.

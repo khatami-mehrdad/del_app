@@ -1,0 +1,13 @@
+---
+description: Core project conventions for all work in this repo
+alwaysApply: true
+---
+
+# Project Core
+
+- Use TypeScript throughout and prefer explicit types at module boundaries.
+- Use named exports by default. Allow default exports where framework conventions require them, such as Next.js pages and layouts.
+- Do not commit secrets or copy values from `.env` files into source, docs, or examples.
+- Reuse existing domain types from `packages/shared` instead of redefining them locally.
+- Keep changes small and consistent with nearby code before introducing new abstractions.
+- After substantive edits, run the smallest useful verification for the touched area, such as lint, build, or a focused test.

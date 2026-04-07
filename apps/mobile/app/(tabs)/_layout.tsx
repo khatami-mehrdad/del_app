@@ -1,8 +1,10 @@
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { colors, fonts } from '@/lib/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '@/lib/auth-context';
+import { CoachUsingClientAppScreen } from '@/components/CoachUsingClientAppScreen';
 
 function HomeIcon({ color }: { color: string }) {
   return (
@@ -41,8 +43,28 @@ function JourneyIcon({ color }: { color: string }) {
 }
 
 export default function TabLayout() {
+  const { profile, loading } = useAuth();
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 16);
+
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.cream,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <ActivityIndicator color={colors.gold} />
+      </View>
+    );
+  }
+
+  if (profile?.role === 'coach') {
+    return <CoachUsingClientAppScreen />;
+  }
 
   return (
     <Tabs

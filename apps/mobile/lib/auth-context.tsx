@@ -53,17 +53,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .maybeSingle();
 
-      setProfile((prof as Profile | null) ?? null);
+      const profileRow = (prof as Profile | null) ?? null;
+      setProfile(profileRow);
 
-      const { data: progs } = await supabase
-        .from('programs')
-        .select('*')
-        .eq('client_id', userId)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1);
+      if (profileRow?.role === 'coach') {
+        setProgram(null);
+      } else {
+        const { data: progs } = await supabase
+          .from('programs')
+          .select('*')
+          .eq('client_id', userId)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1);
 
-      setProgram((progs?.[0] as Program | null) ?? null);
+        setProgram((progs?.[0] as Program | null) ?? null);
+      }
     } finally {
       setLoading(false);
     }

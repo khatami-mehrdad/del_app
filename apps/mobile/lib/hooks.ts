@@ -9,7 +9,11 @@ export function usePractice(programId: string | undefined, weekNumber: number) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!programId) return;
+    if (!programId) {
+      setPractice(null);
+      setLoading(false);
+      return;
+    }
     supabase
       .from('practices')
       .select('*')
@@ -32,7 +36,11 @@ export function useWeekCheckins(programId: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   const fetch = useCallback(async () => {
-    if (!programId) return;
+    if (!programId) {
+      setCheckins([]);
+      setLoading(false);
+      return;
+    }
     const now = new Date();
     const monday = new Date(now);
     monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
@@ -61,7 +69,11 @@ export function useJourneyEntries(programId: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!programId) return;
+    if (!programId) {
+      setEntries([]);
+      setLoading(false);
+      return;
+    }
     supabase
       .from('journey_entries')
       .select('*')
@@ -83,7 +95,11 @@ export function useMessages(programId: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!programId) return;
+    if (!programId) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
 
     supabase
       .from('messages')

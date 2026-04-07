@@ -70,6 +70,28 @@ export default function MessagesScreen() {
     scrollRef.current?.scrollToEnd({ animated: true });
   }, [messages.length]);
 
+  if (!program) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>S</Text>
+          </View>
+          <View>
+            <Text style={styles.headerName}>Sahar</Text>
+            <Text style={styles.headerStatus}>Responds within 24 hours</Text>
+          </View>
+        </View>
+        <View style={styles.noProgramWrap}>
+          <Text style={styles.noProgramText}>
+            Messaging needs an active program. Open the Home tab for details, or ask
+            your coach to finish setup.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   async function handleSend() {
     if (!input.trim() || !program || !user) return;
     setSending(true);
@@ -187,6 +209,19 @@ export default function MessagesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream },
   loadingWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  noProgramWrap: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    paddingBottom: 32,
+  },
+  noProgramText: {
+    fontFamily: fonts.sans.light,
+    fontSize: 14,
+    lineHeight: 22,
+    color: colors.brownMid,
+    textAlign: 'center',
+  },
   header: {
     backgroundColor: colors.brown,
     paddingHorizontal: 20,

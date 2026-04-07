@@ -18,6 +18,23 @@ export default function JourneyScreen() {
   const completedSessions = entries.length;
   const progress = completedSessions / totalSessions;
 
+  if (!program) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Your journey</Text>
+          <Text style={styles.subtitle}>Written by Sahar after each session</Text>
+        </View>
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>
+            An active program is required. Open the Home tab for details, or ask your
+            coach to finish setup.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>

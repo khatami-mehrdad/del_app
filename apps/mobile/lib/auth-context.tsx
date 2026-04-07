@@ -46,24 +46,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function fetchUserData(userId: string) {
-    const { data: prof } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
 
-    setProfile(prof as Profile | null);
+      setProfile((prof as Profile | null) ?? null);
 
-    const { data: progs } = await supabase
-      .from('programs')
-      .select('*')
-      .eq('client_id', userId)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1);
+      const { data: progs } = await supabase
+        .from('programs')
+        .select('*')
+        .eq('client_id', userId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-    setProgram(progs?.[0] as Program | null ?? null);
-    setLoading(false);
+      setProgram((progs?.[0] as Program | null) ?? null);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function signOut() {

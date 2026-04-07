@@ -47,22 +47,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Name and email required" }, { status: 400 });
   }
 
-  const { data: newUser, error: userError } =
-    await supabaseAdmin.auth.admin.createUser({
-      email,
-      email_confirm: true,
-      user_metadata: { role: "client", full_name: name },
+  // inviteUserByEmail sends the invite / set-password email. createUser does not.
+  const { data: invited, error: userError } =
+    await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      data: { role: "client", full_name: name },
     });
 
   if (userError) {
     return NextResponse.json({ error: userError.message }, { status: 400 });
   }
 
+  if (!invited.user) {
+    return NextResponse.json(
+      { error: "Could not create invited user" },
+      { status: 500 }
+    );
+  }
+
   const { data: program, error: progError } = await supabaseAdmin
     .from("programs")
     .insert({
       coach_id: coach.id,
-      client_id: newUser.user.id,
+      client_id: invited.user.id,
       start_date: startDate || new Date().toISOString().split("T")[0],
     })
     .select()

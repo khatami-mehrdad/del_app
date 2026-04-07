@@ -1,5 +1,0 @@
-{
-  "buildCommand": "pnpm --filter @del/web build",
-  "installCommand": "pnpm install",
-  "outputDirectory": "apps/web/.next"
-}

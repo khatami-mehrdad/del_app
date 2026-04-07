@@ -21,7 +21,7 @@ function clientInviteRedirectTo(): string | undefined {
     (process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL.replace(/^https?:\/\//, "")}`
       : undefined);
-  return base ? `${base}/login` : undefined;
+  return base ? `${base}/auth/callback` : undefined;
 }
 
 export async function POST(req: NextRequest) {

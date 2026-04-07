@@ -6,13 +6,16 @@ export type { Database } from './database.types';
 export function createSupabaseClient(
   url: string,
   anonKey: string,
-  options?: { localStorage?: any }
+  options?: { localStorage?: any; detectSessionInUrl?: boolean }
 ) {
   return createClient<Database>(url, anonKey, {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      ...(options?.localStorage && { storage: options.localStorage }),
+      ...(options?.detectSessionInUrl !== undefined
+        ? { detectSessionInUrl: options.detectSessionInUrl }
+        : {}),
+      ...(options?.localStorage ? { storage: options.localStorage } : {}),
     },
   });
 }

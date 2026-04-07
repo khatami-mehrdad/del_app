@@ -1,11 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
 export default function LoginPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    const search = window.location.search;
+    const hasImplicit =
+      hash.includes("access_token") ||
+      hash.includes("type=invite") ||
+      hash.includes("type=signup");
+    const hasPkce = search.includes("code=");
+    if (hasImplicit || hasPkce) {
+      window.location.replace(
+        `${window.location.origin}/auth/callback${search}${hash}`
+      );
+    }
+  }, []);
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");

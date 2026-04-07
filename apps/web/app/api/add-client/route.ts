@@ -14,6 +14,16 @@ function createSupabaseAdmin() {
   });
 }
 
+/** Invite links use this as redirect_to when set; add the URL to Supabase Auth redirect allow list. */
+function clientInviteRedirectTo(): string | undefined {
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL.replace(/^https?:\/\//, "")}`
+      : undefined);
+  return base ? `${base}/login` : undefined;
+}
+
 export async function POST(req: NextRequest) {
   const supabaseAdmin = createSupabaseAdmin();
   const authHeader = req.headers.get("authorization");
@@ -48,9 +58,11 @@ export async function POST(req: NextRequest) {
   }
 
   // inviteUserByEmail sends the invite / set-password email. createUser does not.
+  const redirectTo = clientInviteRedirectTo();
   const { data: invited, error: userError } =
     await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       data: { role: "client", full_name: name },
+      ...(redirectTo ? { redirectTo } : {}),
     });
 
   if (userError) {

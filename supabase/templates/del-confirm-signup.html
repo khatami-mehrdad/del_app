@@ -1,0 +1,144 @@
+<!--
+  Supabase Dashboard → Authentication → Email Templates → Confirm sign up
+  Subject: Welcome to del — Confirm your account
+
+  Keeps the same visual system as del-invite-user.html for coaches (and any email signup).
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Confirm your account</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #1c1410;
+      font-family:
+        Georgia,
+        'Times New Roman',
+        serif;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      style="background-color: #1c1410; padding: 40px 16px"
+    >
+      <tr>
+        <td align="center">
+          <p
+            style="
+              margin: 0 0 8px 0;
+              font-family: Georgia, serif;
+              font-size: 36px;
+              font-weight: 300;
+              font-style: italic;
+              color: #d4b07a;
+              letter-spacing: 0.02em;
+            "
+          >
+            del
+          </p>
+          <p
+            style="
+              margin: 0 0 36px 0;
+              font-family:
+                ui-sans-serif,
+                system-ui,
+                sans-serif;
+              font-size: 10px;
+              font-weight: 200;
+              letter-spacing: 0.35em;
+              text-transform: uppercase;
+              color: rgba(212, 176, 122, 0.55);
+            "
+          >
+            Companion app
+          </p>
+
+          <table
+            role="presentation"
+            width="100%"
+            cellspacing="0"
+            cellpadding="0"
+            style="max-width: 420px; background-color: #2a1a0e; border-radius: 16px"
+          >
+            <tr>
+              <td style="padding: 36px 28px 32px 28px; text-align: center">
+                <h1
+                  style="
+                    margin: 0 0 12px 0;
+                    font-family: Georgia, serif;
+                    font-size: 22px;
+                    font-weight: 300;
+                    color: #f7f2ea;
+                  "
+                >
+                  Welcome
+                </h1>
+                <p
+                  style="
+                    margin: 0 0 28px 0;
+                    font-family:
+                      ui-sans-serif,
+                      system-ui,
+                      sans-serif;
+                    font-size: 14px;
+                    font-weight: 300;
+                    line-height: 1.55;
+                    color: rgba(247, 242, 234, 0.72);
+                  "
+                >
+                  Your space is almost ready. Confirm your email to begin.
+                </p>
+                <a
+                  href="{{ .ConfirmationURL }}"
+                  style="
+                    display: inline-block;
+                    padding: 14px 28px;
+                    border-radius: 9999px;
+                    background-color: #b8924a;
+                    font-family:
+                      ui-sans-serif,
+                      system-ui,
+                      sans-serif;
+                    font-size: 11px;
+                    font-weight: 400;
+                    letter-spacing: 0.2em;
+                    text-transform: uppercase;
+                    text-decoration: none;
+                    color: #ffffff;
+                  "
+                  >Confirm your email</a
+                >
+              </td>
+            </tr>
+          </table>
+
+          <p
+            style="
+              margin: 28px 0 0 0;
+              max-width: 360px;
+              font-family:
+                ui-sans-serif,
+                system-ui,
+                sans-serif;
+              font-size: 11px;
+              font-weight: 300;
+              line-height: 1.5;
+              color: rgba(154, 117, 96, 0.65);
+              text-align: center;
+            "
+          >
+            If you didn't create this account, you can safely ignore this email.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

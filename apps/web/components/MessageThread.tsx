@@ -32,7 +32,7 @@ function formatDate(iso: string) {
   return d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
 }
 
-export default function MessageThread({
+export function MessageThread({
   programId,
   userId,
   clientName,

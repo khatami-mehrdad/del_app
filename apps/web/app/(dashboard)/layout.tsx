@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
-import Sidebar from "@/components/Sidebar";
+import { Sidebar } from "@/components/Sidebar";
 
 function DashboardGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -13,17 +13,22 @@ function DashboardGuard({ children }: { children: React.ReactNode }) {
     if (!loading && !user) router.replace("/login");
   }, [user, loading, router]);
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="flex h-screen items-center justify-center bg-cream">
-        <p className="font-serif italic text-xl text-gold-light animate-pulse">
-          del
-        </p>
+        <div className="text-center px-6">
+          <p className="font-serif italic text-xl text-gold-light animate-pulse">
+            del
+          </p>
+          {!loading && (
+            <p className="mt-3 font-sans font-extralight text-[10px] tracking-[0.2em] uppercase text-brown-light">
+              Redirecting to sign in
+            </p>
+          )}
+        </div>
       </div>
     );
   }
-
-  if (!user) return null;
 
   return (
     <div className="flex h-screen overflow-hidden">

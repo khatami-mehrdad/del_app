@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useClients } from "@/lib/hooks";
-import AddClientModal from "@/components/AddClientModal";
+import { AddClientModal } from "@/components/AddClientModal";
 
 export default function DashboardHome() {
   const router = useRouter();

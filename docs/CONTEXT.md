@@ -34,8 +34,8 @@ There is no public landing page yet.
 Important behavior:
 
 - The redirect from `/` to `/login` is client-side, not server-side
-- In `DashboardGuard`, once auth loading finishes and there is no user, the component returns `null` and then triggers `router.replace("/login")`
-- Result: visiting `/` while logged out can briefly show a blank cream page before the login screen appears
+- In `DashboardGuard`, once auth loading finishes and there is no user, the component keeps rendering a loading/redirect state and triggers `router.replace("/login")`
+- Result: the current repo no longer renders a blank `null` state for logged-out dashboard visits, but it still relies on a client-side redirect rather than a server-side one
 
 This likely explains the blank Vercel preview/screenshot at the site root.
 
@@ -118,7 +118,7 @@ Relevant findings:
 
 - Mobile startup depended on `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 - If those values are missing at build time, the app could fail before rendering a screen
-- `apps/mobile` was also missing `expo-web-browser`, which broke typecheck
+- The repo previously still contained leftover Expo starter files that pulled in `expo-web-browser`
 - `apps/mobile/app.json` had `newArchEnabled: true`; this can be risky in Expo SDK 54 Android release builds
 
 Changes made:
@@ -126,7 +126,8 @@ Changes made:
 - Added a safer mobile startup path so missing public Supabase env no longer hard-crashes the app during initialization
 - Added an in-app error screen for missing mobile Supabase env
 - Set `newArchEnabled` to `false` in `apps/mobile/app.json`
-- Added `expo-web-browser`
+- Removed unused Expo starter files and the unnecessary `expo-web-browser` dependency
+- Removed unused `react-native-reanimated` and `react-native-worklets` because they forced Android new architecture during release builds
 - Added `apps/mobile/.env.example`
 
 Next rebuild checklist:
@@ -142,3 +143,17 @@ If the blank root experience should be removed, the next thing to implement is:
 1. Redirect unauthenticated requests at the route level or server level instead of waiting for client auth state
 2. Optionally add an `apps/web/.env.example` documenting required variables
 3. Optionally add a small deployment note for Vercel project settings
+
+## Rules alignment note on 2026-04-07
+
+The repo was partially brought into alignment with `.cursor/rules`:
+
+- Web reusable components were converted from default exports to named exports
+- The mobile Expo starter leftovers were removed
+- The mobile `Colors` constant now uses a named export
+- `apps/web/app/(auth)/layout.tsx` no longer uses `"use client"`
+- The web dashboard no longer renders a blank `null` state for logged-out users
+
+Remaining known gap:
+
+- The web dashboard auth redirect still happens on the client rather than the server

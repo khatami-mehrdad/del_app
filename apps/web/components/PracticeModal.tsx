@@ -10,7 +10,7 @@ interface Props {
   onSuccess?: () => void;
 }
 
-export default function PracticeModal({ programId, weekNumber, onClose, onSuccess }: Props) {
+export function PracticeModal({ programId, weekNumber, onClose, onSuccess }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);

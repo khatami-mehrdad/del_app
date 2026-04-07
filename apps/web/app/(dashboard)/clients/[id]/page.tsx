@@ -14,9 +14,9 @@ import {
   sendMessage,
   markMessagesRead,
 } from "@/lib/hooks";
-import PracticeModal from "@/components/PracticeModal";
-import JourneyEditor from "@/components/JourneyEditor";
-import MessageThread from "@/components/MessageThread";
+import { PracticeModal } from "@/components/PracticeModal";
+import { JourneyEditor } from "@/components/JourneyEditor";
+import { MessageThread } from "@/components/MessageThread";
 
 export default function ClientDetailPage() {
   const params = useParams();

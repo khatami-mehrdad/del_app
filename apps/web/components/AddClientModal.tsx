@@ -10,7 +10,7 @@ interface Props {
   onSuccess?: () => void;
 }
 
-export default function AddClientModal({ onClose, onSuccess }: Props) {
+export function AddClientModal({ onClose, onSuccess }: Props) {
   const { user } = useAuth();
   const router = useRouter();
   const [name, setName] = useState("");

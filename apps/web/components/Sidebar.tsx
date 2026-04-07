@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useClients } from "@/lib/hooks";
-import AddClientModal from "@/components/AddClientModal";
+import { AddClientModal } from "@/components/AddClientModal";
 
 const GRADIENTS = [
   "from-[#B8924A] to-[#6B4C38]",
@@ -15,7 +15,7 @@ const GRADIENTS = [
   "from-[#2A1A0E] to-[#6B4C38]",
 ];
 
-export default function Sidebar() {
+export function Sidebar() {
   const params = useParams();
   const activeId = params?.id as string;
   const { signOut } = useAuth();

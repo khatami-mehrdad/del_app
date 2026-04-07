@@ -44,8 +44,7 @@
         {
           "microphonePermission": "del needs access to your microphone to record voice notes."
         }
-      ],
-      "expo-web-browser"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

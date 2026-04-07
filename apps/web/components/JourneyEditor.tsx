@@ -13,7 +13,7 @@ interface Props {
   onSaved: () => void;
 }
 
-export default function JourneyEditor({
+export function JourneyEditor({
   programId,
   weekNumber,
   sessionDate,

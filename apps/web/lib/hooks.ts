@@ -15,6 +15,10 @@ export interface ClientListItem {
   currentMonth: number;
 }
 
+type ClientProgramRow = Program & {
+  client: Profile;
+};
+
 export function useClients() {
   const { user } = useAuth();
   const [clients, setClients] = useState<ClientListItem[]>([]);
@@ -29,28 +33,35 @@ export function useClients() {
       .eq("coach_id", user.id)
       .eq("status", "active");
 
-    if (!programs) { setLoading(false); return; }
+    if (!programs) {
+      setLoading(false);
+      return;
+    }
 
     const items: ClientListItem[] = await Promise.all(
-      programs.map(async (p: any) => {
+      (programs as ClientProgramRow[]).map(async (program) => {
         const { count } = await supabase
           .from("messages")
           .select("*", { count: "exact", head: true })
-          .eq("program_id", p.id)
+          .eq("program_id", program.id)
           .neq("sender_id", user.id)
           .is("read_at", null);
 
-        const weeksSinceStart = Math.max(1,
-          Math.ceil((Date.now() - new Date(p.start_date).getTime()) / (7 * 24 * 60 * 60 * 1000))
+        const weeksSinceStart = Math.max(
+          1,
+          Math.ceil(
+            (Date.now() - new Date(program.start_date).getTime()) /
+              (7 * 24 * 60 * 60 * 1000)
+          )
         );
         const currentMonth = Math.ceil(weeksSinceStart / 4);
 
         return {
-          program: p,
-          client: p.client,
+          program,
+          client: program.client,
           unread: count ?? 0,
-          currentWeek: Math.min(weeksSinceStart, p.total_sessions),
-          currentMonth: Math.min(currentMonth, p.total_months),
+          currentWeek: Math.min(weeksSinceStart, program.total_sessions),
+          currentMonth: Math.min(currentMonth, program.total_months),
         };
       })
     );
@@ -59,7 +70,20 @@ export function useClients() {
     setLoading(false);
   }, [user]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadClients() {
+      await fetch();
+      if (cancelled) return;
+    }
+
+    void loadClients();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetch]);
 
   return { clients, loading, refetch: fetch };
 }
@@ -84,7 +108,20 @@ export function usePractice(programId: string | null, weekNumber: number) {
       });
   }, [programId, weekNumber]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPractice() {
+      await fetch();
+      if (cancelled) return;
+    }
+
+    void loadPractice();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetch]);
 
   return { practice, loading, refetch: fetch };
 }
@@ -136,7 +173,20 @@ export function useJourneyEntries(programId: string | null) {
     setLoading(false);
   }, [programId]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadJourneyEntries() {
+      await fetch();
+      if (cancelled) return;
+    }
+
+    void loadJourneyEntries();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetch]);
 
   return { entries, loading, refetch: fetch };
 }

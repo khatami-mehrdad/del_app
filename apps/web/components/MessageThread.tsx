@@ -33,7 +33,6 @@ function formatDate(iso: string) {
 }
 
 export function MessageThread({
-  programId,
   userId,
   clientName,
   messages,
@@ -46,8 +45,8 @@ export function MessageThread({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    onMarkRead();
-  }, [messages.length]);
+    void onMarkRead();
+  }, [messages.length, onMarkRead]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -61,8 +60,6 @@ export function MessageThread({
     setInput("");
     setSending(false);
   }
-
-  let lastDate = "";
 
   return (
     <div className="flex flex-col h-full">
@@ -94,10 +91,11 @@ export function MessageThread({
         ref={scrollRef}
         className="flex-1 overflow-y-auto px-6 py-4 space-y-3"
       >
-        {messages.map((msg) => {
+        {messages.map((msg, index) => {
           const msgDate = formatDate(msg.created_at);
-          const showDate = msgDate !== lastDate;
-          lastDate = msgDate;
+          const previousDate =
+            index > 0 ? formatDate(messages[index - 1].created_at) : null;
+          const showDate = msgDate !== previousDate;
           const isMe = msg.sender_id === userId;
 
           return (

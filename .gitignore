@@ -2,11 +2,16 @@ node_modules/
 .next/
 dist/
 .turbo/
+.vercel/
 .expo/
 *.tsbuildinfo
 .env
 .env.local
 .env.*.local
+.secrets/
 ios/
 android/
 apps/.DS_Store
+apps/mobile/.secrets/
+.vercel
+.env*.local

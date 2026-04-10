@@ -1,0 +1,185 @@
+name: Deploy web
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      environment_name:
+        description: "GitHub environment / Vercel target"
+        required: true
+        default: production
+        type: choice
+        options:
+          - preview
+          - production
+      ref:
+        description: "Git ref to deploy (optional)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-web-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  resolve-target:
+    runs-on: ubuntu-latest
+    outputs:
+      environment_name: ${{ steps.resolve.outputs.environment_name }}
+      vercel_target: ${{ steps.resolve.outputs.vercel_target }}
+      ref: ${{ steps.resolve.outputs.ref }}
+    steps:
+      - name: Resolve deploy target
+        id: resolve
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            environment_name="${{ inputs.environment_name }}"
+            ref_to_checkout="${{ inputs.ref || github.sha }}"
+          elif [[ "${{ github.ref_type }}" == "tag" || "${{ github.ref_name }}" == "main" ]]; then
+            environment_name="production"
+            ref_to_checkout="${{ github.sha }}"
+          else
+            environment_name="preview"
+            ref_to_checkout="${{ github.sha }}"
+          fi
+
+          echo "environment_name=$environment_name" >> "$GITHUB_OUTPUT"
+          echo "vercel_target=$environment_name" >> "$GITHUB_OUTPUT"
+          echo "ref=$ref_to_checkout" >> "$GITHUB_OUTPUT"
+
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.final.outputs.web }}
+    needs: resolve-target
+    steps:
+      - name: Mark manual deploys as web changes
+        id: manual
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "web=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "web=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.manual.outputs.web != 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-target.outputs.ref }}
+
+      - name: Detect changed web files
+        if: steps.manual.outputs.web != 'true'
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            web:
+              - "apps/web/**"
+              - "packages/**"
+              - "pnpm-lock.yaml"
+              - "pnpm-workspace.yaml"
+              - "package.json"
+              - "turbo.json"
+              - ".github/workflows/deploy-web.yml"
+              - "scripts/cicd/**"
+
+      - name: Resolve web change result
+        id: final
+        run: |
+          if [[ "${{ steps.manual.outputs.web }}" == "true" ]]; then
+            echo "web=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "web=${{ steps.filter.outputs.web }}" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs:
+      - resolve-target
+      - changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ needs.resolve-target.outputs.environment_name }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      APPLE_APP_SITE_ASSOCIATION_APP_IDS: ${{ vars.APPLE_APP_SITE_ASSOCIATION_APP_IDS }}
+      ANDROID_SHA256_CERT_FINGERPRINTS: ${{ vars.ANDROID_SHA256_CERT_FINGERPRINTS }}
+      NEXT_PUBLIC_ACCOUNT_DELETION_EMAIL: ${{ vars.NEXT_PUBLIC_ACCOUNT_DELETION_EMAIL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-target.outputs.ref }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.7.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install monorepo dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Sync Vercel environment from GitHub
+        run: node scripts/cicd/sync-vercel-env.mjs "${{ needs.resolve-target.outputs.vercel_target }}"
+
+      - name: Pull Vercel project settings
+        run: >
+          pnpm dlx vercel@latest pull --yes
+          --environment="${{ needs.resolve-target.outputs.vercel_target }}"
+          --token="$VERCEL_TOKEN"
+
+      - name: Build deployment bundle
+        run: |
+          if [[ "${{ needs.resolve-target.outputs.vercel_target }}" == "production" ]]; then
+            pnpm dlx vercel@latest build --prod --token="$VERCEL_TOKEN"
+          else
+            pnpm dlx vercel@latest build --token="$VERCEL_TOKEN"
+          fi
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          if [[ "${{ needs.resolve-target.outputs.vercel_target }}" == "production" ]]; then
+            deployment_url="$(pnpm dlx vercel@latest deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
+          else
+            deployment_url="$(pnpm dlx vercel@latest deploy --prebuilt --token="$VERCEL_TOKEN")"
+          fi
+
+          deployment_url="${deployment_url#https://}"
+          echo "deployment_url=https://${deployment_url}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate deployment well-known files
+        run: node scripts/cicd/validate-well-known.mjs "${{ steps.deploy.outputs.deployment_url }}"
+
+      - name: Validate canonical production well-known files
+        if: needs.resolve-target.outputs.vercel_target == 'production'
+        run: node scripts/cicd/validate-well-known.mjs "$NEXT_PUBLIC_SITE_URL"
+
+      - name: Publish deployment summary
+        run: |
+          {
+            echo "## Web deployment"
+            echo
+            echo "- Target: ${{ needs.resolve-target.outputs.vercel_target }}"
+            echo "- URL: ${{ steps.deploy.outputs.deployment_url }}"
+          } >> "$GITHUB_STEP_SUMMARY"

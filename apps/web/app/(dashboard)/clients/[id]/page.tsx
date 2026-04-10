@@ -9,8 +9,6 @@ import {
   usePractice,
   useJourneyEntries,
   useMessages,
-  postPractice,
-  saveJourneyEntry,
   sendMessage,
   markMessagesRead,
 } from "@/lib/hooks";
@@ -103,7 +101,7 @@ export default function ClientDetailPage() {
         {/* Check-ins */}
         <div className="bg-white rounded-xl p-6 border border-cream-mid">
           <p className="font-sans font-light text-xs tracking-[0.25em] uppercase text-gold mb-5">
-            This week's check-ins
+            This week&apos;s check-ins
           </p>
           {checkins.length === 0 ? (
             <p className="font-sans font-light text-base text-brown-light/50">
@@ -193,7 +191,7 @@ export default function ClientDetailPage() {
                     Week {note.week_number} · {note.session_date}
                   </p>
                   <p className="font-serif italic text-lg text-brown mb-2">
-                    "{note.title}"
+                    &quot;{note.title}&quot;
                   </p>
                   <p className="font-sans font-light text-base text-brown-mid leading-relaxed">
                     {note.body}

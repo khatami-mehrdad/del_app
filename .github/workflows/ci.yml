@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed areas
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            web:
+              - "apps/web/**"
+              - "packages/**"
+              - "pnpm-lock.yaml"
+              - "pnpm-workspace.yaml"
+              - "package.json"
+              - "turbo.json"
+            mobile:
+              - "apps/mobile/**"
+              - "packages/**"
+              - "pnpm-lock.yaml"
+              - "pnpm-workspace.yaml"
+              - "package.json"
+              - "turbo.json"
+
+  web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: example-anon-key
+      SUPABASE_SERVICE_ROLE_KEY: example-service-role
+      NEXT_PUBLIC_SITE_URL: https://example.test
+      VERCEL_URL: example.vercel.app
+      APPLE_APP_SITE_ASSOCIATION_APP_IDS: TEAMID.com.saharshams.del
+      ANDROID_SHA256_CERT_FINGERPRINTS: AA:BB:CC:DD:EE:FF
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.7.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install monorepo dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint web app
+        run: pnpm --dir apps/web lint
+
+      - name: Build web app
+        run: pnpm --dir apps/web build
+
+  mobile:
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.7.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install monorepo dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck mobile app
+        run: pnpm --dir apps/mobile lint

@@ -4,6 +4,8 @@
 
   Also set Site URL + Redirect URLs to your production web URL (not localhost),
   or links in emails will point at localhost. Allow /client-invite for mobile-first onboarding.
+  Invite links use HTTPS so iOS/Android can open the native app via universal / app links
+  when the app is installed (see apps/web/app/.well-known/* and EXPO_PUBLIC_WEB_APP_HOST).
 -->
 <!DOCTYPE html>
 <html lang="en">

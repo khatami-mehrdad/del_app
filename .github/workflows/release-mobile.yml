@@ -1,0 +1,170 @@
+name: Release mobile
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment_name:
+        description: "GitHub environment and EAS release target"
+        required: true
+        default: production
+        type: choice
+        options:
+          - preview
+          - production
+      platform:
+        description: "Platform(s) to release"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-mobile-${{ github.workflow }}-${{ github.ref }}-${{ inputs.environment_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/eas-mobile-build.yml
+    with:
+      environment_name: ${{ inputs.environment_name }}
+      profile: ${{ inputs.environment_name == 'production' && 'production' || 'preview' }}
+      platform: ${{ inputs.platform }}
+    secrets: inherit
+
+  submit-ios:
+    needs: build
+    if: (inputs.platform == 'all' || inputs.platform == 'ios') && needs.build.outputs.ios_build_id != ''
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment_name }}
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_ASC_API_KEY_PATH: ./.secrets/AuthKey.p8
+      EXPO_ASC_KEY_ID: ${{ vars.APP_STORE_CONNECT_KEY_ID }}
+      EXPO_ASC_ISSUER_ID: ${{ vars.APP_STORE_CONNECT_ISSUER_ID }}
+      EXPO_APPLE_TEAM_ID: ${{ vars.EXPO_APPLE_TEAM_ID }}
+      APP_STORE_CONNECT_APP_ID: ${{ vars.APP_STORE_CONNECT_APP_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.7.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install monorepo dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Write App Store Connect private key
+        working-directory: apps/mobile
+        env:
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: node ../../scripts/cicd/write-secret-file.mjs ".secrets/AuthKey.p8" APP_STORE_CONNECT_PRIVATE_KEY
+
+      - name: Render submit profiles
+        working-directory: apps/mobile
+        run: node ../../scripts/cicd/render-eas-submit-config.mjs
+
+      - name: Submit iOS build
+        working-directory: apps/mobile
+        run: >
+          eas submit --platform ios
+          --profile "${{ inputs.environment_name == 'production' && 'production' || 'preview' }}"
+          --id "${{ needs.build.outputs.ios_build_id }}"
+          --non-interactive
+          --wait
+
+      - name: Publish iOS release summary
+        run: |
+          {
+            echo "## iOS release"
+            echo
+            echo "- Build ID: ${{ needs.build.outputs.ios_build_id }}"
+            echo "- Environment: ${{ inputs.environment_name }}"
+            echo "- Result: Uploaded to App Store Connect / TestFlight"
+            echo "- Note: Final App Store review and release state remain managed in App Store Connect."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  submit-android:
+    needs: build
+    if: (inputs.platform == 'all' || inputs.platform == 'android') && needs.build.outputs.android_build_id != ''
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment_name }}
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      APP_STORE_CONNECT_APP_ID: ${{ vars.APP_STORE_CONNECT_APP_ID }}
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+      GOOGLE_PLAY_SERVICE_ACCOUNT_PATH: ./.secrets/google-play-service-account.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.7.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install monorepo dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Write Google Play service account
+        working-directory: apps/mobile
+        run: >
+          node ../../scripts/cicd/write-secret-file.mjs
+          ".secrets/google-play-service-account.json"
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON
+
+      - name: Render submit profiles
+        working-directory: apps/mobile
+        run: node ../../scripts/cicd/render-eas-submit-config.mjs
+
+      - name: Submit Android build
+        working-directory: apps/mobile
+        run: >
+          eas submit --platform android
+          --profile "${{ inputs.environment_name == 'production' && 'production' || 'preview' }}"
+          --id "${{ needs.build.outputs.android_build_id }}"
+          --non-interactive
+          --wait
+
+      - name: Publish Android release summary
+        run: |
+          {
+            echo "## Android release"
+            echo
+            echo "- Build ID: ${{ needs.build.outputs.android_build_id }}"
+            echo "- Environment: ${{ inputs.environment_name }}"
+            echo "- Result: Submitted to Google Play"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -3,7 +3,17 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "NEXT_PUBLIC_SITE_URL",
+        "VERCEL_URL",
+        "ANDROID_SHA256_CERT_FINGERPRINTS",
+        "APPLE_APP_SITE_ASSOCIATION_APP_IDS",
+        "NEXT_PUBLIC_ACCOUNT_DELETION_EMAIL"
+      ]
     },
     "dev": {
       "cache": false,

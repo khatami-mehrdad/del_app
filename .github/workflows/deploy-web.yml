@@ -168,7 +168,8 @@ jobs:
           deployment_url="${deployment_url#https://}"
           echo "deployment_url=https://${deployment_url}" >> "$GITHUB_OUTPUT"
 
-      - name: Validate deployment well-known files
+      - name: Validate preview deployment well-known files
+        if: needs.resolve-target.outputs.vercel_target != 'production'
         run: node scripts/cicd/validate-well-known.mjs "${{ steps.deploy.outputs.deployment_url }}"
 
       - name: Validate canonical production well-known files

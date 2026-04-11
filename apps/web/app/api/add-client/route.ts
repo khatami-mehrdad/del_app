@@ -1,18 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-
-function createSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !serviceRoleKey) {
-    throw new Error("Missing Supabase server environment variables");
-  }
-
-  return createClient(url, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-}
+import { requireCoach } from "../_lib/admin";
 
 /** Invite links use this as redirect_to when set; add the URL to Supabase Auth redirect allow list. */
 function clientInviteRedirectTo(): string | undefined {
@@ -25,32 +12,9 @@ function clientInviteRedirectTo(): string | undefined {
 }
 
 export async function POST(req: NextRequest) {
-  const supabaseAdmin = createSupabaseAdmin();
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const token = authHeader.slice(7);
-  const {
-    data: { user: coach },
-  } = await supabaseAdmin.auth.getUser(token);
-  if (!coach) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { data: coachProfile } = await supabaseAdmin
-    .from("profiles")
-    .select("role")
-    .eq("id", coach.id)
-    .maybeSingle();
-
-  if (!coachProfile || coachProfile.role !== "coach") {
-    return NextResponse.json(
-      { error: "Only coaches can add clients" },
-      { status: 403 }
-    );
-  }
+  const result = await requireCoach(req);
+  if (result.error) return result.error;
+  const { coach, supabaseAdmin } = result;
 
   const { name, email, startDate } = await req.json();
   if (!name || !email) {

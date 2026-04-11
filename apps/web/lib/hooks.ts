@@ -13,6 +13,7 @@ export interface ClientListItem {
   unread: number;
   currentWeek: number;
   currentMonth: number;
+  pending: boolean;
 }
 
 type ClientProgramRow = Program & {
@@ -38,6 +39,30 @@ export function useClients() {
       return;
     }
 
+    // Fetch signup status for all clients
+    const clientIds = (programs as ClientProgramRow[]).map((p) => p.client_id);
+    let statuses: Record<string, { confirmed: boolean }> = {};
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (token && clientIds.length > 0) {
+        const res = await globalThis.fetch("/api/client-status", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ clientIds }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          statuses = json.statuses ?? {};
+        }
+      }
+    } catch {
+      // If status check fails, treat all as confirmed (non-blocking)
+    }
+
     const items: ClientListItem[] = await Promise.all(
       (programs as ClientProgramRow[]).map(async (program) => {
         const { count } = await supabase
@@ -56,12 +81,16 @@ export function useClients() {
         );
         const currentMonth = Math.ceil(weeksSinceStart / 4);
 
+        const status = statuses[program.client_id];
+        const pending = status ? !status.confirmed : false;
+
         return {
           program,
           client: program.client,
           unread: count ?? 0,
           currentWeek: Math.min(weeksSinceStart, program.total_sessions),
           currentMonth: Math.min(currentMonth, program.total_months),
+          pending,
         };
       })
     );

@@ -73,7 +73,11 @@ export function Sidebar() {
                   {item.client.full_name}
                 </p>
                 <p className="font-sans font-light text-xs text-white/30 tracking-wide">
-                  Week {item.currentWeek} · Month {item.currentMonth}
+                  {item.pending ? (
+                    <span className="text-amber-400/70">Invite pending</span>
+                  ) : (
+                    <>Week {item.currentWeek} · Month {item.currentMonth}</>
+                  )}
                 </p>
               </div>
               {item.unread > 0 && (

@@ -40,12 +40,6 @@ export function ClientInviteScreen() {
     return `${base}/client-invite?${queryString}`;
   }, [queryString, originFallback]);
 
-  /** Custom scheme fallback when the OS does not hand off HTTPS to the app. */
-  const appSchemeInviteUrl = useMemo(() => {
-    if (!queryString) return null;
-    return `del-companion://client-invite?${queryString}`;
-  }, [queryString]);
-
   useEffect(() => {
     let cancelled = false;
 
@@ -140,14 +134,6 @@ export function ClientInviteScreen() {
     router.replace("/login");
   }
 
-  function openAppSchemeFallback() {
-    if (appSchemeInviteUrl) {
-      window.location.assign(appSchemeInviteUrl);
-    } else {
-      window.location.assign("del-companion://login");
-    }
-  }
-
   if (phase === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#1C1410] px-6">
@@ -166,50 +152,29 @@ export function ClientInviteScreen() {
       <div className="flex min-h-screen items-center justify-center bg-[#1C1410] px-6">
         <div className="w-full max-w-sm text-center">
           <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">del</p>
-          <p className="mb-3 font-serif text-xl font-light text-white">Open the companion app</p>
+          <p className="mb-3 font-serif text-xl font-light text-white">Welcome to del</p>
           <p className="mb-8 font-sans text-sm font-extralight leading-relaxed text-white/45">
-            Tap below to open the del companion app on this device. On phones with the app
-            installed, the same invite opens via your normal web link (universal link).
+            Your coach has invited you. Set up your password here, then download and sign
+            into the companion app.
           </p>
           <div className="space-y-3">
-            {universalInviteUrl ? (
-              <a
-                href={universalInviteUrl}
-                className="block w-full rounded-full bg-gold py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
-              >
-                Open companion app
-              </a>
-            ) : (
-              <button
-                type="button"
-                onClick={openAppSchemeFallback}
-                className="w-full rounded-full bg-gold py-3 font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
-              >
-                Open companion app
-              </button>
-            )}
-            {universalInviteUrl && appSchemeInviteUrl ? (
-              <button
-                type="button"
-                onClick={openAppSchemeFallback}
-                className="w-full rounded-full border border-white/10 py-3 font-sans text-xs font-light uppercase tracking-[0.2em] text-white/70 hover:border-gold/40"
-              >
-                Open with app link instead
-              </button>
-            ) : null}
             <button
               type="button"
               onClick={() => void handleContinueOnWeb()}
               disabled={submitting}
-              className="w-full rounded-full border border-white/15 py-3 font-sans text-xs font-light uppercase tracking-[0.2em] text-white/85 hover:border-gold/50 disabled:opacity-50"
+              className="w-full rounded-full bg-gold py-3 font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light disabled:opacity-50"
             >
-              {submitting ? "..." : "Continue on web instead"}
+              {submitting ? "..." : "Set up your account"}
             </button>
+            {universalInviteUrl ? (
+              <a
+                href={universalInviteUrl}
+                className="block w-full rounded-full border border-white/10 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white/50 hover:border-gold/40"
+              >
+                Already have the app? Open it
+              </a>
+            ) : null}
           </div>
-          <p className="mt-8 font-sans text-xs font-extralight leading-relaxed text-white/25">
-            Web is only a backup for onboarding. Your day-to-day client experience lives in
-            the mobile app.
-          </p>
         </div>
       </div>
     );
@@ -224,7 +189,7 @@ export function ClientInviteScreen() {
               del
             </h1>
             <p className="font-sans text-[10px] font-extralight tracking-[0.3em] text-white/20 uppercase">
-              Client onboarding fallback
+              Client onboarding
             </p>
           </div>
 
@@ -274,38 +239,32 @@ export function ClientInviteScreen() {
   }
 
   if (phase === "done") {
+    const apkUrl = process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL;
+
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#1C1410] px-6">
         <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">del</p>
-        <p className="mb-3 font-serif text-xl font-light text-white">You&apos;re set</p>
+        <p className="mb-3 font-serif text-xl font-light text-white">Your account is ready</p>
         <p className="max-w-sm text-center font-sans text-sm font-extralight leading-relaxed text-white/45">
-          Open the companion app on your phone and sign in with your new password.
+          Now download the companion app, install it on your phone, and sign in with your
+          email and the password you just set.
         </p>
         <div className="mt-10 space-y-3">
+          {apkUrl ? (
+            <a
+              href={apkUrl}
+              className="block w-72 rounded-full bg-gold px-8 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
+            >
+              Download the app
+            </a>
+          ) : null}
           {universalInviteUrl ? (
             <a
               href={universalInviteUrl}
-              className="block w-72 rounded-full bg-gold px-8 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
+              className="block w-72 rounded-full border border-white/10 px-8 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white/50 hover:border-gold/40"
             >
-              Open companion app
+              Already have the app? Open it
             </a>
-          ) : (
-            <button
-              type="button"
-              onClick={openAppSchemeFallback}
-              className="w-72 rounded-full bg-gold px-8 py-3 font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
-            >
-              Open companion app
-            </button>
-          )}
-          {universalInviteUrl && appSchemeInviteUrl ? (
-            <button
-              type="button"
-              onClick={openAppSchemeFallback}
-              className="w-72 rounded-full border border-white/10 px-8 py-3 font-sans text-xs font-light uppercase tracking-[0.2em] text-white/70 hover:border-gold/40"
-            >
-              Open with app link instead
-            </button>
           ) : null}
           <button
             type="button"

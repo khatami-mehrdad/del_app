@@ -91,7 +91,10 @@ export default function ClientInviteScreen() {
     }
 
     setSubmitting(true);
-    const { error: updateError } = await supabase.auth.updateUser({ password });
+    const { error: updateError } = await supabase.auth.updateUser({
+      password,
+      data: { password_set: true },
+    });
     setSubmitting(false);
 
     if (updateError) {

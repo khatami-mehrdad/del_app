@@ -56,6 +56,16 @@ export function ClientInviteScreen() {
       if (cancelled) return;
 
       if (session?.user.user_metadata?.role === "client") {
+        // If the user just clicked the invite link, Supabase consumed the
+        // token server-side and redirected here with an active session but
+        // no password set yet. We set a `password_set` flag in user metadata
+        // when the password form is submitted — if it's missing, show the
+        // password form.
+        if (!session.user.user_metadata?.password_set) {
+          setPhase("password");
+          return;
+        }
+
         setPhase("done");
         return;
       }
@@ -118,7 +128,10 @@ export function ClientInviteScreen() {
     }
 
     setSubmitting(true);
-    const { error: updateError } = await supabase.auth.updateUser({ password });
+    const { error: updateError } = await supabase.auth.updateUser({
+      password,
+      data: { password_set: true },
+    });
     setSubmitting(false);
 
     if (updateError) {

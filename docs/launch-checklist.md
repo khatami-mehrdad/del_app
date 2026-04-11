@@ -202,13 +202,15 @@ Only after that can you apply for production access.
 After Play + Apple credentials are in place:
 
 1. Run `EAS mobile build` for `preview`
-2. Check the produced build IDs / artifact URLs
-3. Run `Release mobile`
+2. Leave `publish_android_prerelease` enabled when you want the latest Android preview APK to be uploaded to GitHub Releases automatically
+3. Share the stable prerelease page `preview-android-latest` or its direct APK asset URL
+4. Run `Release mobile` when you want store submission
 
 What that does:
 
 - iOS: uploads to App Store Connect / TestFlight
 - Android: submits to Google Play
+- Preview Android builds can also refresh a stable GitHub prerelease APK for direct side-loading outside the stores
 
 ### 10. iOS values you still need to collect
 

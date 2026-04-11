@@ -7,6 +7,11 @@ on:
         description: "GitHub / EAS environment name"
         required: true
         type: string
+      publish_android_prerelease:
+        description: "Publish the preview Android APK to a stable GitHub prerelease"
+        required: false
+        default: false
+        type: boolean
       profile:
         description: "EAS build profile"
         required: true
@@ -28,6 +33,12 @@ on:
       android_build_url:
         description: "EAS Android artifact URL"
         value: ${{ jobs.build.outputs.android_build_url }}
+      android_prerelease_apk_url:
+        description: "Stable GitHub prerelease APK URL for preview Android builds"
+        value: ${{ jobs.build.outputs.android_prerelease_apk_url }}
+      android_prerelease_url:
+        description: "Stable GitHub prerelease page URL for preview Android builds"
+        value: ${{ jobs.build.outputs.android_prerelease_url }}
       build_ids:
         description: "All EAS build IDs as JSON array"
         value: ${{ jobs.build.outputs.build_ids }}
@@ -41,6 +52,11 @@ on:
         options:
           - preview
           - production
+      publish_android_prerelease:
+        description: "Publish preview Android APK to the stable GitHub prerelease"
+        required: true
+        default: true
+        type: boolean
       platform:
         description: "EAS platform"
         required: true
@@ -61,7 +77,7 @@ on:
           - development
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: eas-mobile-build-${{ github.workflow }}-${{ inputs.environment_name }}-${{ inputs.profile }}-${{ inputs.platform }}
@@ -76,6 +92,8 @@ jobs:
       ios_build_url: ${{ steps.extract.outputs.ios_build_url }}
       android_build_id: ${{ steps.extract.outputs.android_build_id }}
       android_build_url: ${{ steps.extract.outputs.android_build_url }}
+      android_prerelease_apk_url: ${{ steps.publish_preview.outputs.apk_url }}
+      android_prerelease_url: ${{ steps.publish_preview.outputs.release_url }}
       build_ids: ${{ steps.extract.outputs.build_ids }}
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -143,3 +161,60 @@ jobs:
         with:
           name: eas-build-${{ inputs.environment_name }}-${{ inputs.profile }}-${{ inputs.platform }}
           path: apps/mobile/eas-build.json
+
+      - name: Publish preview Android APK prerelease
+        id: publish_preview
+        if: inputs.publish_android_prerelease && inputs.environment_name == 'preview' && steps.extract.outputs.android_build_url != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ANDROID_BUILD_ID: ${{ steps.extract.outputs.android_build_id }}
+          ANDROID_BUILD_URL: ${{ steps.extract.outputs.android_build_url }}
+          RELEASE_TAG: preview-android-latest
+        run: |
+          set -euo pipefail
+
+          apk_path="$RUNNER_TEMP/del-preview-android-latest.apk"
+          release_url="https://github.com/${GITHUB_REPOSITORY}/releases/tag/${RELEASE_TAG}"
+          apk_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/del-preview-android-latest.apk"
+
+          curl -L "$ANDROID_BUILD_URL" -o "$apk_path"
+
+          release_notes="$(cat <<EOF
+          Latest preview Android APK built by GitHub Actions.
+
+          - Workflow run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          - EAS build ID: ${ANDROID_BUILD_ID}
+          - Source artifact: ${ANDROID_BUILD_URL}
+
+          Share the attached APK asset for direct install on Android devices.
+          EOF
+          )"
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" \
+              --title "Preview Android APK (latest)" \
+              --notes "$release_notes" \
+              --prerelease
+          else
+            gh release create "$RELEASE_TAG" "$apk_path#del-preview-android-latest.apk" \
+              --title "Preview Android APK (latest)" \
+              --notes "$release_notes" \
+              --prerelease
+          fi
+
+          gh release upload "$RELEASE_TAG" "$apk_path#del-preview-android-latest.apk" --clobber
+
+          {
+            echo "release_url=${release_url}"
+            echo "apk_url=${apk_url}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish preview APK summary
+        if: steps.publish_preview.outputs.release_url != ''
+        run: |
+          {
+            echo "## Preview Android APK"
+            echo
+            echo "- GitHub prerelease: ${{ steps.publish_preview.outputs.release_url }}"
+            echo "- Direct APK: ${{ steps.publish_preview.outputs.apk_url }}"
+          } >> "$GITHUB_STEP_SUMMARY"

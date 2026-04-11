@@ -30,12 +30,14 @@ const outputs = {
 };
 
 for (const build of builds) {
-  if (build?.platform === "ios") {
+  const platform = String(build?.platform ?? "").toLowerCase();
+
+  if (platform === "ios") {
     outputs.ios_build_id = build.id ?? "";
     outputs.ios_build_url = getBuildUrl(build);
   }
 
-  if (build?.platform === "android") {
+  if (platform === "android") {
     outputs.android_build_id = build.id ?? "";
     outputs.android_build_url = getBuildUrl(build);
   }

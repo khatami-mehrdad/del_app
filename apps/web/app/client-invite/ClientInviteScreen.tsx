@@ -259,8 +259,8 @@ export function ClientInviteScreen() {
         <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">del</p>
         <p className="mb-3 font-serif text-xl font-light text-white">Your account is ready</p>
         <p className="max-w-sm text-center font-sans text-sm font-extralight leading-relaxed text-white/45">
-          Now download the companion app, install it on your phone, and sign in with your
-          email and the password you just set.
+          Download the companion app on your phone, open it, and sign in
+          with your email and the password you just created.
         </p>
         <div className="mt-10 space-y-3">
           {apkUrl ? (
@@ -269,14 +269,6 @@ export function ClientInviteScreen() {
               className="block w-72 rounded-full bg-gold px-8 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
             >
               Download the app
-            </a>
-          ) : null}
-          {universalInviteUrl ? (
-            <a
-              href={universalInviteUrl}
-              className="block w-72 rounded-full border border-white/10 px-8 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white/50 hover:border-gold/40"
-            >
-              Already have the app? Open it
             </a>
           ) : null}
           <button

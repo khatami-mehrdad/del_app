@@ -46,8 +46,8 @@ export default function LoginScreen() {
         <Text style={styles.logo}>del</Text>
         <Text style={styles.subtitle}>Companion App</Text>
         <Text style={styles.helper}>
-          New here? Open your invite email on this phone to finish setting up your
-          client account.
+
+          Sign in with the email and password your coach set up for you. New here? Check your email for an invite from your coach.
         </Text>
 
         <TextInput

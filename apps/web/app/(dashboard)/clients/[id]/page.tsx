@@ -122,6 +122,7 @@ export default function ClientDetailPage() {
         }}
         onMarkRead={async () => {
           await markMessagesRead(programId, user!.id);
+          await refetch();
         }}
       />
     );

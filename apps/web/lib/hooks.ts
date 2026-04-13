@@ -118,8 +118,11 @@ export function useClients() {
   useEffect(() => {
     if (!user) return;
 
+    const channelName = `sidebar-messages-${user.id}`;
+    supabase.removeChannel(supabase.channel(channelName));
+
     const channel = supabase
-      .channel("sidebar-messages")
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -128,7 +131,6 @@ export function useClients() {
           table: "messages",
         },
         (payload) => {
-          // Only refetch if the message is from someone else
           if (payload.new && (payload.new as { sender_id: string }).sender_id !== user.id) {
             void fetch();
           }

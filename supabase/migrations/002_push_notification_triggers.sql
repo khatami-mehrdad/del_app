@@ -4,14 +4,9 @@
 -- Fires the send-push Edge Function on INSERT for messages,
 -- practices, and journey_entries.
 --
--- SETUP (one-time, via Supabase Dashboard → Project Settings):
---   ALTER DATABASE postgres SET app.settings.edge_function_url =
---     'https://<project-ref>.supabase.co/functions/v1/send-push';
---   ALTER DATABASE postgres SET app.settings.service_role_key =
---     '<your-service-role-key>';
---
--- Or configure via Dashboard → Database → Webhooks as an
--- alternative to this migration.
+-- The deployed trigger hardcodes fn_url and svc_key. Update the
+-- values below (or via CREATE OR REPLACE after applying) to match
+-- your project.
 -- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
@@ -23,17 +18,10 @@ SECURITY DEFINER
 SET search_path = extensions, public
 AS $$
 DECLARE
-  fn_url  text;
-  svc_key text;
+  fn_url  text := 'https://zqvxstbkrybtiyyufhyx.supabase.co/functions/v1/send-push';
+  svc_key text := current_setting('app.settings.service_role_key', true);
   payload jsonb;
 BEGIN
-  fn_url  := current_setting('app.settings.edge_function_url', true);
-  svc_key := current_setting('app.settings.service_role_key', true);
-
-  IF fn_url IS NULL OR fn_url = '' THEN
-    RETURN NEW;
-  END IF;
-
   payload := jsonb_build_object(
     'type',       'INSERT',
     'table',      TG_TABLE_NAME,

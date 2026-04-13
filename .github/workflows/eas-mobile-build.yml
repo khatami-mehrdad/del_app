@@ -215,16 +215,18 @@ jobs:
 
       - name: Upload APK to Vercel Blob
         id: upload_blob
+        continue-on-error: true
         if: inputs.publish_android_prerelease && inputs.environment_name == 'preview' && steps.extract.outputs.android_build_url != ''
         env:
           BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
         run: |
           set -euo pipefail
           apk_path="$RUNNER_TEMP/del-preview-android-latest.apk"
-          output=$(npx vercel blob put "$apk_path" \
+          ls -lh "$apk_path"
+          npx vercel blob put "$apk_path" \
             --pathname del-preview-android-latest.apk \
-            --rw-token "$BLOB_READ_WRITE_TOKEN" 2>&1)
-          blob_url=$(echo "$output" | grep -oE 'https://[^ ]+')
+            --rw-token "$BLOB_READ_WRITE_TOKEN" | tee /tmp/blob-output.txt
+          blob_url=$(grep -oE 'https://[^ ]+' /tmp/blob-output.txt || true)
           echo "blob_url=${blob_url}" >> "$GITHUB_OUTPUT"
 
       - name: Publish preview APK summary

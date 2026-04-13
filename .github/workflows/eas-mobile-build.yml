@@ -39,6 +39,9 @@ on:
       android_prerelease_url:
         description: "Stable GitHub prerelease page URL for preview Android builds"
         value: ${{ jobs.build.outputs.android_prerelease_url }}
+      android_blob_apk_url:
+        description: "Vercel Blob APK URL (direct download, no redirects)"
+        value: ${{ jobs.build.outputs.android_blob_apk_url }}
       build_ids:
         description: "All EAS build IDs as JSON array"
         value: ${{ jobs.build.outputs.build_ids }}
@@ -94,6 +97,7 @@ jobs:
       android_build_url: ${{ steps.extract.outputs.android_build_url }}
       android_prerelease_apk_url: ${{ steps.publish_preview.outputs.apk_url }}
       android_prerelease_url: ${{ steps.publish_preview.outputs.release_url }}
+      android_blob_apk_url: ${{ steps.upload_blob.outputs.blob_url }}
       build_ids: ${{ steps.extract.outputs.build_ids }}
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -209,12 +213,27 @@ jobs:
             echo "apk_url=${apk_url}"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Upload APK to Vercel Blob
+        id: upload_blob
+        if: inputs.publish_android_prerelease && inputs.environment_name == 'preview' && steps.extract.outputs.android_build_url != ''
+        env:
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+        run: |
+          set -euo pipefail
+          apk_path="$RUNNER_TEMP/del-preview-android-latest.apk"
+          output=$(npx vercel blob put "$apk_path" \
+            --pathname del-preview-android-latest.apk \
+            --rw-token "$BLOB_READ_WRITE_TOKEN" 2>&1)
+          blob_url=$(echo "$output" | grep -oE 'https://[^ ]+')
+          echo "blob_url=${blob_url}" >> "$GITHUB_OUTPUT"
+
       - name: Publish preview APK summary
-        if: steps.publish_preview.outputs.release_url != ''
+        if: steps.publish_preview.outputs.release_url != '' || steps.upload_blob.outputs.blob_url != ''
         run: |
           {
             echo "## Preview Android APK"
             echo
             echo "- GitHub prerelease: ${{ steps.publish_preview.outputs.release_url }}"
             echo "- Direct APK: ${{ steps.publish_preview.outputs.apk_url }}"
+            echo "- Vercel Blob: ${{ steps.upload_blob.outputs.blob_url }}"
           } >> "$GITHUB_STEP_SUMMARY"

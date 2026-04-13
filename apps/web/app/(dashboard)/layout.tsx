@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { ClientsProvider } from "@/lib/hooks";
 import { Sidebar } from "@/components/Sidebar";
 import { ClientUsingCoachDashboardScreen } from "@/components/ClientUsingCoachDashboardScreen";
 
@@ -58,10 +59,12 @@ function DashboardGuard({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto bg-cream">{children}</main>
-    </div>
+    <ClientsProvider>
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto bg-cream">{children}</main>
+      </div>
+    </ClientsProvider>
   );
 }
 

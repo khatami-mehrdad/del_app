@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { supabase } from "./supabase";
 import { useAuth } from "./auth-context";
 import type { Profile, Program, Practice, CheckIn, Message, JourneyEntry } from "@del/shared";
@@ -20,12 +20,20 @@ type ClientProgramRow = Program & {
   client: Profile;
 };
 
-export function useClients() {
+interface ClientsContextValue {
+  clients: ClientListItem[];
+  loading: boolean;
+  refetch: () => Promise<void>;
+}
+
+const ClientsContext = createContext<ClientsContextValue | null>(null);
+
+export function ClientsProvider({ children }: { children: React.ReactNode }): React.ReactNode {
   const { user } = useAuth();
   const [clients, setClients] = useState<ClientListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetch = useCallback(async () => {
+  const fetchClients = useCallback(async () => {
     if (!user) return;
 
     const { data: programs } = await supabase
@@ -39,7 +47,6 @@ export function useClients() {
       return;
     }
 
-    // Fetch signup status for all clients
     const clientIds = (programs as ClientProgramRow[]).map((p) => p.client_id);
     let statuses: Record<string, { confirmed: boolean }> = {};
     try {
@@ -101,28 +108,19 @@ export function useClients() {
 
   useEffect(() => {
     let cancelled = false;
-
-    async function loadClients() {
-      await fetch();
+    async function load() {
+      await fetchClients();
       if (cancelled) return;
     }
+    void load();
+    return () => { cancelled = true; };
+  }, [fetchClients]);
 
-    void loadClients();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [fetch]);
-
-  // Re-fetch unread counts when new messages arrive via realtime
   useEffect(() => {
     if (!user) return;
 
-    const channelName = `sidebar-messages-${user.id}`;
-    supabase.removeChannel(supabase.channel(channelName));
-
     const channel = supabase
-      .channel(channelName)
+      .channel(`sidebar-messages-${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -132,16 +130,26 @@ export function useClients() {
         },
         (payload) => {
           if (payload.new && (payload.new as { sender_id: string }).sender_id !== user.id) {
-            void fetch();
+            void fetchClients();
           }
         }
       )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [user, fetch]);
+  }, [user, fetchClients]);
 
-  return { clients, loading, refetch: fetch };
+  return (
+    <ClientsContext.Provider value={{ clients, loading, refetch: fetchClients }}>
+      {children}
+    </ClientsContext.Provider>
+  );
+}
+
+export function useClients() {
+  const ctx = useContext(ClientsContext);
+  if (!ctx) throw new Error("useClients must be used within a ClientsProvider");
+  return ctx;
 }
 
 // ── Current week's practice for a program ───────────────────

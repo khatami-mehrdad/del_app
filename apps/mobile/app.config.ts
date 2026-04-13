@@ -40,6 +40,7 @@ const config: ExpoConfig = {
       "RECORD_AUDIO",
       "android.permission.RECORD_AUDIO",
       "android.permission.MODIFY_AUDIO_SETTINGS",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
     ],
     intentFilters: [
       {
@@ -69,6 +70,12 @@ const config: ExpoConfig = {
       {
         microphonePermission:
           "del needs access to your microphone to record voice notes.",
+      },
+    ],
+    [
+      "expo-notifications",
+      {
+        sounds: [],
       },
     ],
   ],

@@ -18,6 +18,7 @@ import { Text, View } from 'react-native';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
 import { colors, fonts } from '@/lib/theme';
 import { supabaseConfigError } from '@/lib/supabase';
+import { usePushRegistration } from '@/lib/use-push-registration';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -33,6 +34,7 @@ function AuthGate() {
   const { user, loading, profile } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  usePushRegistration();
 
   useEffect(() => {
     if (loading) return;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -18,7 +18,6 @@ import { MessageThread } from "@/components/MessageThread";
 
 export default function ClientDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const programId = params?.id as string;
   const { user } = useAuth();
   const { clients, refetch } = useClients();

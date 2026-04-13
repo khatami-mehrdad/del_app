@@ -275,15 +275,22 @@ export function ClientInviteScreen() {
 
 // ── Done screen with QR code for desktop → phone handoff ──
 
+function getIsMobile() {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function useIsMobile() {
+  // Safe for SSR: returns false on server, real value on client.
+  return useMemo(() => getIsMobile(), []);
+}
+
 function DoneScreen({ onSignOut }: { onSignOut: () => void }) {
   const apkUrl = process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL;
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Detect mobile so we can show direct download vs QR code
-    setIsMobile(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
-
     if (apkUrl) {
       QRCode.toDataURL(apkUrl, {
         width: 200,
@@ -322,6 +329,7 @@ function DoneScreen({ onSignOut }: { onSignOut: () => void }) {
           </p>
           {qrDataUrl ? (
             <div className="mt-8 rounded-2xl bg-white p-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={qrDataUrl} alt="Scan to download the app" width={200} height={200} />
             </div>
           ) : apkUrl ? (

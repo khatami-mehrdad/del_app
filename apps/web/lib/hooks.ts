@@ -114,6 +114,31 @@ export function useClients() {
     };
   }, [fetch]);
 
+  // Re-fetch unread counts when new messages arrive via realtime
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("sidebar-messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        (payload) => {
+          // Only refetch if the message is from someone else
+          if (payload.new && (payload.new as { sender_id: string }).sender_id !== user.id) {
+            void fetch();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user, fetch]);
+
   return { clients, loading, refetch: fetch };
 }
 

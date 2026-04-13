@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
+import QRCode from "qrcode";
 import { supabase } from "@/lib/supabase";
 
 type Phase = "loading" | "launching" | "password" | "done" | "error";
@@ -252,35 +253,7 @@ export function ClientInviteScreen() {
   }
 
   if (phase === "done") {
-    const apkUrl = process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL;
-
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#1C1410] px-6">
-        <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">del</p>
-        <p className="mb-3 font-serif text-xl font-light text-white">Your account is ready</p>
-        <p className="max-w-sm text-center font-sans text-sm font-extralight leading-relaxed text-white/45">
-          Download the companion app on your phone, open it, and sign in
-          with your email and the password you just created.
-        </p>
-        <div className="mt-10 space-y-3">
-          {apkUrl ? (
-            <a
-              href={apkUrl}
-              className="block w-72 rounded-full bg-gold px-8 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
-            >
-              Download the app
-            </a>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => void handleSignOut()}
-            className="w-72 rounded-full border border-white/15 px-8 py-3 font-sans text-xs font-light uppercase tracking-[0.2em] text-white/85 hover:border-gold/50"
-          >
-            Sign out on web
-          </button>
-        </div>
-      </div>
-    );
+    return <DoneScreen onSignOut={handleSignOut} />;
   }
 
   return (
@@ -295,6 +268,79 @@ export function ClientInviteScreen() {
         className="mt-8 text-gold font-sans text-xs font-extralight uppercase tracking-[0.15em] underline underline-offset-2"
       >
         Back to coach sign in
+      </button>
+    </div>
+  );
+}
+
+// ── Done screen with QR code for desktop → phone handoff ──
+
+function DoneScreen({ onSignOut }: { onSignOut: () => void }) {
+  const apkUrl = process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL;
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Detect mobile so we can show direct download vs QR code
+    setIsMobile(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+
+    if (apkUrl) {
+      QRCode.toDataURL(apkUrl, {
+        width: 200,
+        margin: 2,
+        color: { dark: "#1C1410", light: "#FFFFFF" },
+      }).then(setQrDataUrl).catch(() => {});
+    }
+  }, [apkUrl]);
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#1C1410] px-6">
+      <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">del</p>
+      <p className="mb-3 font-serif text-xl font-light text-white">Your account is ready</p>
+
+      {isMobile ? (
+        <>
+          <p className="max-w-sm text-center font-sans text-sm font-extralight leading-relaxed text-white/45">
+            Download the companion app, install it, and sign in with your
+            email and the password you just created.
+          </p>
+          {apkUrl ? (
+            <a
+              href={apkUrl}
+              className="mt-8 block w-72 rounded-full bg-gold px-8 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
+            >
+              Download the app
+            </a>
+          ) : null}
+        </>
+      ) : (
+        <>
+          <p className="max-w-sm text-center font-sans text-sm font-extralight leading-relaxed text-white/45">
+            Scan this QR code with your phone camera to download the companion
+            app. Then open it and sign in with your email and the password you
+            just created.
+          </p>
+          {qrDataUrl ? (
+            <div className="mt-8 rounded-2xl bg-white p-4">
+              <img src={qrDataUrl} alt="Scan to download the app" width={200} height={200} />
+            </div>
+          ) : apkUrl ? (
+            <a
+              href={apkUrl}
+              className="mt-8 block w-72 rounded-full bg-gold px-8 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
+            >
+              Download the app
+            </a>
+          ) : null}
+        </>
+      )}
+
+      <button
+        type="button"
+        onClick={() => void onSignOut()}
+        className="mt-6 w-72 rounded-full border border-white/15 px-8 py-3 font-sans text-xs font-light uppercase tracking-[0.2em] text-white/85 hover:border-gold/50"
+      >
+        Sign out on web
       </button>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -18,6 +18,7 @@ import { MessageThread } from "@/components/MessageThread";
 
 export default function ClientDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const programId = params?.id as string;
   const { user } = useAuth();
   const { clients, refetch } = useClients();
@@ -31,6 +32,8 @@ export default function ClientDetailPage() {
   const [showMessages, setShowMessages] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendResult, setResendResult] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const clientItem = clients.find((c) => c.program.id === programId);
   const weekNumber = clientItem?.currentWeek ?? 1;
@@ -75,6 +78,33 @@ export default function ClientDetailPage() {
       setResendResult("Failed to resend invite");
     }
     setResending(false);
+  }
+
+  async function handleDeleteClient() {
+    setDeleting(true);
+    try {
+      const { data: session } = await (await import("@/lib/supabase")).supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      const res = await fetch("/api/delete-client", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ clientId: clientItem!.client.id }),
+      });
+      if (res.ok) {
+        refetch();
+        router.replace("/");
+      } else {
+        const json = await res.json();
+        alert(json.error ?? "Failed to delete client");
+      }
+    } catch {
+      alert("Failed to delete client");
+    }
+    setDeleting(false);
+    setShowDeleteConfirm(false);
   }
 
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -141,6 +171,13 @@ export default function ClientDetailPage() {
             className="bg-gold text-white px-6 py-3 rounded-full font-sans font-light text-sm tracking-[0.12em] uppercase hover:bg-gold-light transition-colors"
           >
             + Post weekly practice
+          </button>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="border border-red-300/40 text-red-400 px-4 py-3 rounded-full font-sans font-light text-sm tracking-[0.12em] uppercase hover:bg-red-50 transition-colors"
+            title="Remove client"
+          >
+            &times;
           </button>
         </div>
       </div>
@@ -289,6 +326,37 @@ export default function ClientDetailPage() {
             refetchJourney();
           }}
         />
+      )}
+
+      {/* Delete confirmation */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
+            <h2 className="mb-2 font-serif text-xl font-light text-brown">
+              Remove {clientItem.client.full_name}?
+            </h2>
+            <p className="mb-6 font-sans text-sm font-light leading-relaxed text-brown-light">
+              This will permanently delete this client&apos;s account and all their data
+              including check-ins, messages, practices, and session notes. This cannot be
+              undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 rounded-full border border-brown-light/30 py-3 font-sans text-xs font-light uppercase tracking-[0.12em] text-brown-mid hover:bg-cream-dark transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => void handleDeleteClient()}
+                disabled={deleting}
+                className="flex-1 rounded-full bg-red-500 py-3 font-sans text-xs font-light uppercase tracking-[0.12em] text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {deleting ? "Removing..." : "Remove client"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

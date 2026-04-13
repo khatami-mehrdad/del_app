@@ -94,8 +94,9 @@ export default function ClientDetailPage() {
         body: JSON.stringify({ clientId: clientItem!.client.id }),
       });
       if (res.ok) {
-        refetch();
-        router.replace("/");
+        // Full reload so the Sidebar re-fetches the client list
+        window.location.href = "/";
+        return;
       } else {
         const json = await res.json();
         alert(json.error ?? "Failed to delete client");

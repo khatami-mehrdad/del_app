@@ -1,6 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from './supabase';
 import type { Practice, CheckIn, Message, JourneyEntry } from '@del/shared';
+import {
+  fetchPractice,
+  fetchWeekCheckins,
+  fetchMessages,
+  subscribeToMessages,
+  fetchJourneyEntries,
+  markMessagesRead as sharedMarkMessagesRead,
+} from '@del/data';
+import { supabase } from './supabase';
 
 // ── Current week's practice ─────────────────────────────────
 
@@ -14,16 +22,10 @@ export function usePractice(programId: string | undefined, weekNumber: number) {
       setLoading(false);
       return;
     }
-    supabase
-      .from('practices')
-      .select('*')
-      .eq('program_id', programId)
-      .eq('week_number', weekNumber)
-      .maybeSingle()
-      .then(({ data }) => {
-        setPractice(data as Practice | null);
-        setLoading(false);
-      });
+    fetchPractice(supabase, programId, weekNumber).then((data) => {
+      setPractice(data);
+      setLoading(false);
+    });
   }, [programId, weekNumber]);
 
   return { practice, loading };
@@ -35,31 +37,20 @@ export function useWeekCheckins(programId: string | undefined) {
   const [checkins, setCheckins] = useState<CheckIn[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetch = useCallback(async () => {
+  const refetch = useCallback(async () => {
     if (!programId) {
       setCheckins([]);
       setLoading(false);
       return;
     }
-    const now = new Date();
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-    const mondayStr = monday.toISOString().split('T')[0];
-
-    const { data } = await supabase
-      .from('checkins')
-      .select('*')
-      .eq('program_id', programId)
-      .gte('checkin_date', mondayStr)
-      .order('created_at', { ascending: false });
-
-    setCheckins((data as CheckIn[]) ?? []);
+    const data = await fetchWeekCheckins(supabase, programId);
+    setCheckins(data);
     setLoading(false);
   }, [programId]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { refetch(); }, [refetch]);
 
-  return { checkins, loading, refetch: fetch };
+  return { checkins, loading, refetch };
 }
 
 // ── Journey entries ─────────────────────────────────────────
@@ -74,15 +65,10 @@ export function useJourneyEntries(programId: string | undefined) {
       setLoading(false);
       return;
     }
-    supabase
-      .from('journey_entries')
-      .select('*')
-      .eq('program_id', programId)
-      .order('week_number', { ascending: false })
-      .then(({ data }) => {
-        setEntries((data as JourneyEntry[]) ?? []);
-        setLoading(false);
-      });
+    fetchJourneyEntries(supabase, programId).then((data) => {
+      setEntries(data);
+      setLoading(false);
+    });
   }, [programId]);
 
   return { entries, loading };
@@ -101,33 +87,23 @@ export function useMessages(programId: string | undefined) {
       return;
     }
 
-    supabase
-      .from('messages')
-      .select('*')
-      .eq('program_id', programId)
-      .order('created_at', { ascending: true })
-      .then(({ data }) => {
-        setMessages((data as Message[]) ?? []);
+    let cancelled = false;
+
+    fetchMessages(supabase, programId).then((data) => {
+      if (!cancelled) {
+        setMessages(data);
         setLoading(false);
-      });
+      }
+    });
 
-    const channel = supabase
-      .channel(`messages:${programId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `program_id=eq.${programId}`,
-        },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
-        }
-      )
-      .subscribe();
+    const unsubscribe = subscribeToMessages(supabase, programId, (msg) => {
+      if (!cancelled) setMessages((prev) => [...prev, msg]);
+    });
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [programId]);
 
   return { messages, loading };
@@ -185,7 +161,6 @@ export async function markPracticeDone(
 ) {
   const today = new Date().toISOString().split('T')[0];
 
-  // Check if already marked complete today — avoid duplicates
   const { data: alreadyDone } = await supabase
     .from('checkins')
     .select('id')
@@ -199,7 +174,6 @@ export async function markPracticeDone(
     return { error: null };
   }
 
-  // Check for an existing incomplete check-in to update
   const { data: existing } = await supabase
     .from('checkins')
     .select('id')
@@ -265,10 +239,5 @@ export async function sendMessage(
 }
 
 export async function markMessagesRead(programId: string, userId: string) {
-  await supabase
-    .from('messages')
-    .update({ read_at: new Date().toISOString() })
-    .eq('program_id', programId)
-    .neq('sender_id', userId)
-    .is('read_at', null);
+  return sharedMarkMessagesRead(supabase, programId, userId);
 }

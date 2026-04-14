@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import type { Profile } from "@del/shared";
+import { fetchProfile as fetchProfileQuery } from "@del/data";
 import { supabase } from "./supabase";
 
 interface AuthState {
@@ -28,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
+      if (session?.user) loadProfile(session.user.id);
       else setLoading(false);
     });
 
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        if (session?.user) fetchProfile(session.user.id);
+        if (session?.user) loadProfile(session.user.id);
         else {
           setProfile(null);
           setLoading(false);
@@ -47,14 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  async function fetchProfile(userId: string) {
+  async function loadProfile(userId: string) {
     try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-      setProfile((data as Profile | null) ?? null);
+      setProfile(await fetchProfileQuery(supabase, userId));
     } finally {
       setLoading(false);
     }

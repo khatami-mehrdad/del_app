@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { getAccessToken } from "@del/data";
 import { supabase } from "@/lib/supabase";
 
 interface Props {
@@ -27,8 +28,7 @@ export function AddClientModal({ onClose, onSuccess }: Props) {
     setSubmitting(true);
     setError(null);
 
-    const { data: session } = await supabase.auth.getSession();
-    const token = session?.session?.access_token;
+    const token = await getAccessToken(supabase);
     if (!token) {
       setError("Session expired. Please refresh and try again.");
       setSubmitting(false);

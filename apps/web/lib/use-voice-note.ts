@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import type { VoiceNoteHook } from "@del/data";
 
-export function useVoiceNote() {
+export function useVoiceNote(): VoiceNoteHook & { blob: Blob | null; previewUrl: string | null } {
   const [recording, setRecording] = useState(false);
   const [duration, setDuration] = useState(0);
   const [blob, setBlob] = useState<Blob | null>(null);
@@ -44,7 +45,7 @@ export function useVoiceNote() {
     }
   }, [previewUrl]);
 
-  const stopRecording = useCallback(() => {
+  const stopRecording = useCallback(async () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;

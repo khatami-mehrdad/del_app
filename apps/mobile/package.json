@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@del/data": "workspace:*",
     "@del/shared": "workspace:*",
     "@del/supabase": "workspace:*",
     "@expo-google-fonts/cormorant-garamond": "^0.2",

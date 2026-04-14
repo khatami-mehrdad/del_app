@@ -1,5 +1,5 @@
 {
-  "name": "@del/shared",
+  "name": "@del/data",
   "version": "0.0.1",
   "private": true,
   "main": "./src/index.ts",
@@ -7,10 +7,12 @@
   "scripts": {
     "lint": "tsc --noEmit"
   },
+  "dependencies": {
+    "@del/shared": "workspace:*",
+    "@del/supabase": "workspace:*",
+    "@supabase/supabase-js": "^2"
+  },
   "devDependencies": {
     "typescript": "^5"
-  },
-  "dependencies": {
-    "zod": "^4.3.6"
   }
 }

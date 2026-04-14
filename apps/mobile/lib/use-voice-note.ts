@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Alert } from 'react-native';
 import { Audio } from 'expo-av';
+import type { VoiceNoteHook } from '@del/data';
 
-export function useVoiceNote() {
+export function useVoiceNote(): VoiceNoteHook & { uri: string | null } {
   const [recording, setRecording] = useState(false);
   const [duration, setDuration] = useState(0);
   const [uri, setUri] = useState<string | null>(null);

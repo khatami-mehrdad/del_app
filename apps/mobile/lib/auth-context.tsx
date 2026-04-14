@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Profile, Program } from '@del/shared';
+import { fetchProfile } from '@del/data';
 import { supabase } from './supabase';
 
 interface AuthState {
@@ -47,13 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function fetchUserData(userId: string) {
     try {
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
-      const profileRow = (prof as Profile | null) ?? null;
+      const profileRow = await fetchProfile(supabase, userId);
       setProfile(profileRow);
 
       if (profileRow?.role === 'coach') {

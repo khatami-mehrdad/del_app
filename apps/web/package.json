@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@del/data": "workspace:*",
     "@del/shared": "workspace:*",
     "@del/supabase": "workspace:*",
     "@supabase/supabase-js": "^2",

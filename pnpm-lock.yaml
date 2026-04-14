@@ -14,6 +14,9 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@del/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@del/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -102,6 +105,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@del/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@del/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -152,7 +158,27 @@ importers:
         specifier: ^5
         version: 5.9.3
 
+  packages/data:
+    dependencies:
+      '@del/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@del/supabase':
+        specifier: workspace:*
+        version: link:../supabase-client
+      '@supabase/supabase-js':
+        specifier: ^2
+        version: 2.101.1
+    devDependencies:
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
   packages/shared:
+    dependencies:
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       typescript:
         specifier: ^5

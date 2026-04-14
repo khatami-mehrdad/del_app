@@ -16,3 +16,4 @@ apps/mobile/.secrets/
 .vercel
 .env*.local
 del-companion-play-*.json
+*.p8

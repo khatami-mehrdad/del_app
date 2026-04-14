@@ -12,7 +12,12 @@
     "@del/supabase": "workspace:*",
     "@supabase/supabase-js": "^2"
   },
+  "peerDependencies": {
+    "react": ">=18"
+  },
   "devDependencies": {
+    "@types/react": "*",
+    "react": "*",
     "typescript": "^5"
   }
 }

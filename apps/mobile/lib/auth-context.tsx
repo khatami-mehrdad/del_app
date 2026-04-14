@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Profile, Program } from '@del/shared';
-import { fetchProfile } from '@del/data';
+import { useSupabaseAuth } from '@del/data';
 import { supabase } from './supabase';
 
 interface AuthState {
@@ -15,71 +15,25 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+async function loadProgram(userId: string, profile: Profile | null): Promise<Program | null> {
+  if (profile?.role === 'coach') return null;
+  const { data } = await supabase
+    .from('programs')
+    .select('*')
+    .eq('client_id', userId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1);
+  return (data?.[0] as Program | null) ?? null;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [program, setProgram] = useState<Program | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) fetchUserData(session.user.id);
-      else setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) fetchUserData(session.user.id);
-      else {
-        setProfile(null);
-        setProgram(null);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  async function fetchUserData(userId: string) {
-    try {
-      const profileRow = await fetchProfile(supabase, userId);
-      setProfile(profileRow);
-
-      if (profileRow?.role === 'coach') {
-        setProgram(null);
-      } else {
-        const { data: progs } = await supabase
-          .from('programs')
-          .select('*')
-          .eq('client_id', userId)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        setProgram((progs?.[0] as Program | null) ?? null);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function signOut() {
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
-    setProgram(null);
-    setSession(null);
-  }
+  const { user, profile, session, extras, loading, signOut } =
+    useSupabaseAuth<Program>(supabase, loadProgram);
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, program, session, loading, signOut }}
+      value={{ user, profile, program: extras, session, loading, signOut }}
     >
       {children}
     </AuthContext.Provider>

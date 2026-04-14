@@ -1,6 +1,10 @@
 // Types
 export type { SupabaseClient, VoiceNoteHook } from './types';
 
+// Auth
+export { useSupabaseAuth } from './auth/useSupabaseAuth';
+export type { SupabaseAuthState, LoadExtras } from './auth/useSupabaseAuth';
+
 // Queries
 export { fetchMessages, subscribeToMessages } from './queries/messages';
 export { fetchPractice } from './queries/practice';

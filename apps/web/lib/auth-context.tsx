@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import type { Profile } from "@del/shared";
-import { fetchProfile as fetchProfileQuery } from "@del/data";
+import { useSupabaseAuth } from "@del/data";
 import { supabase } from "./supabase";
 
 interface AuthState {
@@ -19,70 +19,29 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+async function signIn(email: string, password: string) {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  return { error: error?.message ?? null };
+}
+
+async function signUp(email: string, password: string, fullName: string) {
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { role: "coach", full_name: fullName } },
+  });
+  return { error: error?.message ?? null };
+}
+
+async function resetPassword(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth/callback#type=recovery`,
+  });
+  return { error: error?.message ?? null };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) loadProfile(session.user.id);
-      else setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) loadProfile(session.user.id);
-        else {
-          setProfile(null);
-          setLoading(false);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  async function loadProfile(userId: string) {
-    try {
-      setProfile(await fetchProfileQuery(supabase, userId));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
-  }
-
-  async function signUp(email: string, password: string, fullName: string) {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { role: "coach", full_name: fullName } },
-    });
-    return { error: error?.message ?? null };
-  }
-
-  async function resetPassword(email: string) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback#type=recovery`,
-    });
-    return { error: error?.message ?? null };
-  }
-
-  async function signOut() {
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
-    setSession(null);
-  }
+  const { user, profile, session, loading, signOut } = useSupabaseAuth(supabase);
 
   return (
     <AuthContext.Provider

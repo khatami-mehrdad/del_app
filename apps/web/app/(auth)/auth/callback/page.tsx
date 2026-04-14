@@ -16,6 +16,13 @@ export default function AuthCallbackPage() {
     function applySession(session: Session | null) {
       if (!session || routed.current || cancelled) return;
 
+      const hash = window.location.hash;
+      if (hash.includes("type=recovery")) {
+        routed.current = true;
+        router.replace("/reset-password");
+        return;
+      }
+
       const role = session.user.user_metadata?.role as string | undefined;
       routed.current = true;
 
@@ -62,7 +69,7 @@ export default function AuthCallbackPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#1C1410] px-6">
       <div className="text-center">
-        <p className="animate-pulse font-serif text-xl italic text-gold-light">del</p>
+        <p className="animate-pulse font-serif text-xl italic text-gold-light">Del</p>
         <p className="mt-4 font-sans text-xs font-extralight tracking-[0.2em] text-white/30">
           {error ?? "Finishing sign-in"}
         </p>

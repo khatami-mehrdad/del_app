@@ -73,12 +73,17 @@ function buildNotification(
   programId: string
 ): { title: string; body: string; data: Record<string, unknown> } | null {
   switch (table) {
-    case "messages":
+    case "messages": {
+      const text = record.content_text as string | undefined;
+      const hasVoice = !!record.voice_note_url;
       return {
         title: `New message from ${coachName}`,
-        body: (record.content_text as string)?.slice(0, 100) ?? "You have a new message",
+        body: hasVoice
+          ? "Voice message"
+          : text?.slice(0, 100) ?? "You have a new message",
         data: { type: "message", programId },
       };
+    }
     case "practices":
       return {
         title: `${coachName} posted this week's practice`,

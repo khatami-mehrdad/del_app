@@ -31,6 +31,7 @@ export default function HomeScreen() {
   const { profile, program, user, signOut } = useAuth();
   const [checkinText, setCheckinText] = useState('');
   const [sending, setSending] = useState(false);
+  const [marking, setMarking] = useState(false);
   const [justSent, setJustSent] = useState(false);
   const voice = useVoiceNote();
 
@@ -54,10 +55,14 @@ export default function HomeScreen() {
     );
   });
 
+  const todayDone = streakDone[todayIndex];
+
   async function handleMarkDone() {
-    if (!program || !user) return;
+    if (!program || !user || marking || todayDone) return;
+    setMarking(true);
     await markPracticeDone(program.id, user.id);
-    refetchCheckins();
+    await refetchCheckins();
+    setMarking(false);
   }
 
   async function handleSendCheckin() {
@@ -152,9 +157,13 @@ export default function HomeScreen() {
             <Text style={styles.practiceTag}>This week's practice</Text>
             <Text style={styles.practiceTitle}>{practice.title}</Text>
             <Text style={styles.practiceDesc}>{practice.description}</Text>
-            <TouchableOpacity style={styles.practiceBtn} onPress={handleMarkDone}>
+            <TouchableOpacity
+              style={[styles.practiceBtn, (todayDone || marking) && styles.practiceBtnDone]}
+              onPress={handleMarkDone}
+              disabled={todayDone || marking}
+            >
               <Text style={styles.practiceBtnText}>
-                {streakDone[todayIndex] ? 'Done today' : 'Mark as done'}
+                {marking ? '...' : todayDone ? 'Done today ✓' : 'Mark as done'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -378,6 +387,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 24,
+  },
+  practiceBtnDone: {
+    opacity: 0.5,
   },
   practiceBtnText: {
     fontFamily: fonts.sans.light,

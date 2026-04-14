@@ -16,7 +16,7 @@ const jost = Jost({
 });
 
 export const metadata: Metadata = {
-  title: "del — Coach Dashboard",
+  title: "Del — Coach Dashboard",
   description: "Companion app for somatic coaching by Sahar Shams",
 };
 

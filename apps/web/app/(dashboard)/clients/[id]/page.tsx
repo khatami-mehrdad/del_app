@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import {
   useClients,
@@ -11,6 +11,7 @@ import {
   useMessages,
   sendMessage,
   markMessagesRead,
+  markCheckinsRead,
 } from "@/lib/hooks";
 import { PracticeModal } from "@/components/PracticeModal";
 import { JourneyEditor } from "@/components/JourneyEditor";
@@ -39,6 +40,12 @@ export default function ClientDetailPage() {
 
   const { checkins } = useCheckins(programId);
   const { practice, refetch: refetchPractice } = usePractice(programId, weekNumber);
+
+  useEffect(() => {
+    if (programId) {
+      void markCheckinsRead(programId).then(() => refetch());
+    }
+  }, [programId, checkins.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const { entries, refetch: refetchJourney } = useJourneyEntries(programId);
   const { messages } = useMessages(programId);
 
@@ -46,7 +53,7 @@ export default function ClientDetailPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <p className="font-serif italic text-xl text-gold-light animate-pulse">
-          del
+          Del
         </p>
       </div>
     );
@@ -117,8 +124,8 @@ export default function ClientDetailPage() {
         clientName={clientItem.client.full_name}
         messages={messages}
         onBack={() => setShowMessages(false)}
-        onSend={async (text) => {
-          await sendMessage(programId, user!.id, text);
+        onSend={async (text, voiceBlob, voiceDuration) => {
+          await sendMessage(programId, user!.id, text, voiceBlob, voiceDuration);
         }}
         onMarkRead={async () => {
           await markMessagesRead(programId, user!.id);

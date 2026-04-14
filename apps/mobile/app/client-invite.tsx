@@ -113,7 +113,7 @@ export default function ClientInviteScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.inner}>
-          <Text style={styles.logo}>del</Text>
+          <Text style={styles.logo}>Del</Text>
 
           {phase === 'verifying' ? (
             <>

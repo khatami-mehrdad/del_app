@@ -27,7 +27,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-7 pt-7 pb-6 border-b border-white/5">
         <p className="font-serif italic text-2xl font-light text-gold-light">
-          del
+          Del
         </p>
         <p className="font-sans font-light text-xs tracking-[0.2em] uppercase text-white/25 mt-1">
           Coach dashboard

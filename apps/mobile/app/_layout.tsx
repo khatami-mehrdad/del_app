@@ -42,8 +42,9 @@ function AuthGate() {
     const inLogin = current === 'login';
     const inInvite = current === 'client-invite';
     const inCoachOnly = current === 'coach-only';
+    const inForgotPassword = current === 'forgot-password';
 
-    if (!user && !inLogin && !inInvite) {
+    if (!user && !inLogin && !inInvite && !inForgotPassword) {
       router.replace('/login');
       return;
     }
@@ -68,6 +69,7 @@ function AuthGate() {
       <Stack.Screen name="coach-only" />
       <Stack.Screen name="client-invite" />
       <Stack.Screen name="login" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="forgot-password" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
@@ -121,7 +123,7 @@ export default function RootLayout() {
             marginBottom: 8,
           }}
         >
-          del
+          Del
         </Text>
         <Text
           style={{

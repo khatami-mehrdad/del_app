@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | del",
-  description: "Privacy policy for the del companion app and coach dashboard.",
+  title: "Privacy Policy | Del",
+  description: "Privacy policy for the Del companion app and coach dashboard.",
 };
 
 const sections = [
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
   return (
     <main className="min-h-screen bg-[#1C1410] px-6 py-16 text-white">
       <div className="mx-auto max-w-3xl">
-        <p className="font-serif text-4xl font-light italic text-gold-light">del</p>
+        <p className="font-serif text-4xl font-light italic text-gold-light">Del</p>
         <h1 className="mt-8 font-serif text-4xl font-light text-white">Privacy Policy</h1>
         <p className="mt-4 max-w-2xl font-sans text-sm font-extralight leading-7 text-white/70">
           This page explains how del handles information when clients and coaches use the

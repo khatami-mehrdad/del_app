@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Delete account | del",
-  description: "Request deletion of your del companion account and associated data.",
+  title: "Delete account | Del",
+  description: "Request deletion of your Del companion account and associated data.",
 };
 
 /**
@@ -16,7 +16,7 @@ export default function DeleteAccountPage() {
   return (
     <main className="min-h-screen bg-[#1C1410] px-6 py-16 text-white">
       <div className="mx-auto max-w-3xl">
-        <p className="font-serif text-4xl font-light italic text-gold-light">del</p>
+        <p className="font-serif text-4xl font-light italic text-gold-light">Del</p>
         <h1 className="mt-8 font-serif text-4xl font-light text-white">
           Delete your account and data
         </h1>

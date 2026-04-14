@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { Message } from "@del/shared";
+import { useVoiceNote } from "@/lib/use-voice-note";
 
 interface Props {
   programId: string;
@@ -9,7 +10,7 @@ interface Props {
   clientName: string;
   messages: Message[];
   onBack: () => void;
-  onSend: (text: string) => Promise<void>;
+  onSend: (text: string, voiceBlob?: Blob, voiceDuration?: number) => Promise<void>;
   onMarkRead: () => Promise<void>;
 }
 
@@ -43,6 +44,7 @@ export function MessageThread({
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const voice = useVoiceNote();
 
   useEffect(() => {
     void onMarkRead();
@@ -54,10 +56,11 @@ export function MessageThread({
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() && !voice.blob) return;
     setSending(true);
-    await onSend(input.trim());
+    await onSend(input.trim(), voice.blob ?? undefined, voice.blob ? voice.duration : undefined);
     setInput("");
+    voice.reset();
     setSending(false);
   }
 
@@ -114,10 +117,18 @@ export function MessageThread({
                   }`}
                 >
                   {msg.voice_note_url ? (
-                    <p className={`font-sans font-light text-sm ${isMe ? "text-white/70" : "text-brown-mid"}`}>
-                      Voice note · {Math.floor((msg.voice_note_duration_sec ?? 0) / 60)}:
-                      {String((msg.voice_note_duration_sec ?? 0) % 60).padStart(2, "0")}
-                    </p>
+                    <div>
+                      <audio
+                        src={msg.voice_note_url}
+                        controls
+                        preload="metadata"
+                        className="h-8 max-w-[240px]"
+                      />
+                      <p className={`font-sans font-extralight text-[10px] mt-1 ${isMe ? "text-white/40" : "text-brown-light/60"}`}>
+                        Voice note · {Math.floor((msg.voice_note_duration_sec ?? 0) / 60)}:
+                        {String((msg.voice_note_duration_sec ?? 0) % 60).padStart(2, "0")}
+                      </p>
+                    </div>
                   ) : (
                     <p
                       className={`font-sans font-light text-sm leading-relaxed ${
@@ -142,25 +153,57 @@ export function MessageThread({
       </div>
 
       {/* Input */}
-      <form
-        onSubmit={handleSend}
-        className="flex items-center gap-3 px-6 py-4 border-t border-cream-mid bg-white shrink-0"
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Write a message..."
-          className="flex-1 bg-cream-dark rounded-full px-5 py-3 font-sans font-light text-sm text-brown placeholder:text-brown-light/40 focus:outline-none"
-        />
-        <button
-          type="submit"
-          disabled={sending || !input.trim()}
-          className="bg-gold text-white px-5 py-3 rounded-full font-sans font-light text-xs tracking-[0.15em] uppercase hover:bg-gold-light transition-colors disabled:opacity-40"
+      <div className="border-t border-cream-mid bg-white shrink-0">
+        {voice.blob && (
+          <div className="flex items-center gap-3 px-6 pt-3">
+            <audio src={voice.previewUrl ?? undefined} controls className="h-8 flex-1" />
+            <button
+              type="button"
+              onClick={voice.reset}
+              className="font-sans font-extralight text-[10px] tracking-[0.15em] uppercase text-brown-light hover:text-brown transition-colors"
+            >
+              Remove
+            </button>
+          </div>
+        )}
+        <form
+          onSubmit={handleSend}
+          className="flex items-center gap-3 px-6 py-4"
         >
-          Send
-        </button>
-      </form>
+          <button
+            type="button"
+            onClick={voice.recording ? voice.stopRecording : voice.startRecording}
+            className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+              voice.recording
+                ? "bg-red-500 text-white"
+                : "bg-cream-dark text-brown-light hover:bg-cream-mid"
+            }`}
+            title={voice.recording ? "Stop recording" : "Record voice note"}
+          >
+            {voice.recording ? (
+              <span className="font-sans text-[10px] font-light">
+                {Math.floor(voice.duration / 60)}:{String(voice.duration % 60).padStart(2, "0")}
+              </span>
+            ) : (
+              <span className="text-sm">🎤</span>
+            )}
+          </button>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Write a message..."
+            className="flex-1 bg-cream-dark rounded-full px-5 py-3 font-sans font-light text-sm text-brown placeholder:text-brown-light/40 focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={sending || (!input.trim() && !voice.blob)}
+            className="bg-gold text-white px-5 py-3 rounded-full font-sans font-light text-xs tracking-[0.15em] uppercase hover:bg-gold-light transition-colors disabled:opacity-40"
+          >
+            Send
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

@@ -107,6 +107,7 @@ export interface Database {
           voice_note_duration_sec: number | null;
           practice_completed: boolean;
           checkin_date: string;
+          coach_read_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -118,6 +119,7 @@ export interface Database {
           voice_note_duration_sec?: number | null;
           practice_completed?: boolean;
           checkin_date: string;
+          coach_read_at?: string | null;
           created_at?: string;
         };
         Update: {
@@ -125,6 +127,7 @@ export interface Database {
           voice_note_url?: string | null;
           voice_note_duration_sec?: number | null;
           practice_completed?: boolean;
+          coach_read_at?: string | null;
         };
         Relationships: [];
       };

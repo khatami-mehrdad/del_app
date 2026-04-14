@@ -10,7 +10,7 @@ const webAppHost =
   "del.saharshams.com";
 
 const config: ExpoConfig = {
-  name: "del",
+  name: "Del",
   slug: "del-companion",
   version: "1.0.0",
   orientation: "portrait",
@@ -27,6 +27,9 @@ const config: ExpoConfig = {
     supportsTablet: false,
     bundleIdentifier: "com.saharshams.del",
     associatedDomains: [`applinks:${webAppHost}`],
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     package: "com.saharshams.del",
@@ -69,7 +72,7 @@ const config: ExpoConfig = {
       "expo-av",
       {
         microphonePermission:
-          "del needs access to your microphone to record voice notes.",
+          "Del needs access to your microphone to record voice notes.",
       },
     ],
     [

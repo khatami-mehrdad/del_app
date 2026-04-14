@@ -152,7 +152,7 @@ export function ClientInviteScreen() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#1C1410] px-6">
         <div className="text-center">
-          <p className="animate-pulse font-serif text-xl italic text-gold-light">del</p>
+          <p className="animate-pulse font-serif text-xl italic text-gold-light">Del</p>
           <p className="mt-4 font-sans text-xs font-extralight tracking-[0.2em] text-white/30">
             Preparing your invite
           </p>
@@ -165,8 +165,8 @@ export function ClientInviteScreen() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#1C1410] px-6">
         <div className="w-full max-w-sm text-center">
-          <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">del</p>
-          <p className="mb-3 font-serif text-xl font-light text-white">Welcome to del</p>
+          <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">Del</p>
+          <p className="mb-3 font-serif text-xl font-light text-white">Welcome to Del</p>
           <p className="mb-8 font-sans text-sm font-extralight leading-relaxed text-white/45">
             Your coach has invited you. Set up your password here, then download and sign
             into the companion app.
@@ -200,7 +200,7 @@ export function ClientInviteScreen() {
         <div className="w-full max-w-sm">
           <div className="mb-10 text-center">
             <h1 className="mb-1 font-serif text-3xl font-light italic text-gold-light">
-              del
+              Del
             </h1>
             <p className="font-sans text-[10px] font-extralight tracking-[0.3em] text-white/20 uppercase">
               Client onboarding
@@ -258,7 +258,7 @@ export function ClientInviteScreen() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#1C1410] px-6">
-      <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">del</p>
+      <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">Del</p>
       <p className="max-w-sm text-center font-sans text-sm font-extralight leading-relaxed text-white/50">
         {error}
       </p>
@@ -302,7 +302,7 @@ function DoneScreen({ onSignOut }: { onSignOut: () => void }) {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#1C1410] px-6">
-      <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">del</p>
+      <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">Del</p>
       <p className="mb-3 font-serif text-xl font-light text-white">Your account is ready</p>
 
       {isMobile ? (

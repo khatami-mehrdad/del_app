@@ -147,14 +147,21 @@ export async function submitCheckin(
   let voiceUrl: string | null = null;
 
   if (voiceUri) {
-    const fileName = `${programId}/${today}-${Date.now()}.m4a`;
-    const response = await fetch(voiceUri);
-    const blob = await response.blob();
+    const fileName = `checkins/${programId}/${today}-${Date.now()}.m4a`;
+    const formData = new FormData();
+    formData.append('', {
+      uri: voiceUri,
+      type: 'audio/mp4',
+      name: `${Date.now()}.m4a`,
+    } as unknown as Blob);
+
     const { error: upErr } = await supabase.storage
       .from('voice-notes')
-      .upload(fileName, blob, { contentType: 'audio/m4a' });
+      .upload(fileName, formData, { contentType: 'audio/mp4' });
 
-    if (!upErr) {
+    if (upErr) {
+      console.warn('Voice upload failed:', upErr.message);
+    } else {
       const { data } = supabase.storage.from('voice-notes').getPublicUrl(fileName);
       voiceUrl = data.publicUrl;
     }
@@ -178,6 +185,21 @@ export async function markPracticeDone(
 ) {
   const today = new Date().toISOString().split('T')[0];
 
+  // Check if already marked complete today — avoid duplicates
+  const { data: alreadyDone } = await supabase
+    .from('checkins')
+    .select('id')
+    .eq('program_id', programId)
+    .eq('checkin_date', today)
+    .eq('practice_completed', true)
+    .limit(1)
+    .maybeSingle();
+
+  if (alreadyDone) {
+    return { error: null };
+  }
+
+  // Check for an existing incomplete check-in to update
   const { data: existing } = await supabase
     .from('checkins')
     .select('id')
@@ -207,12 +229,37 @@ export async function markPracticeDone(
 export async function sendMessage(
   programId: string,
   senderId: string,
-  text: string
+  text: string,
+  voiceUri?: string,
+  voiceDuration?: number
 ) {
+  let voiceUrl: string | null = null;
+
+  if (voiceUri) {
+    const fileName = `messages/${programId}/${Date.now()}.m4a`;
+    const formData = new FormData();
+    formData.append('', {
+      uri: voiceUri,
+      type: 'audio/mp4',
+      name: `${Date.now()}.m4a`,
+    } as unknown as Blob);
+
+    const { error: upErr } = await supabase.storage
+      .from('voice-notes')
+      .upload(fileName, formData, { contentType: 'audio/mp4' });
+
+    if (!upErr) {
+      const { data } = supabase.storage.from('voice-notes').getPublicUrl(fileName);
+      voiceUrl = data.publicUrl;
+    }
+  }
+
   const { error } = await supabase.from('messages').insert({
     program_id: programId,
     sender_id: senderId,
-    content_text: text,
+    content_text: text || null,
+    voice_note_url: voiceUrl,
+    voice_note_duration_sec: voiceDuration ?? null,
   });
   return { error: error?.message ?? null };
 }

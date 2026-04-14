@@ -11,7 +11,7 @@ export function CoachUsingClientAppScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <StatusBar style="light" />
       <View style={styles.inner}>
-        <Text style={styles.logo}>del</Text>
+        <Text style={styles.logo}>Del</Text>
         <Text style={styles.title}>Coach account</Text>
         <Text style={styles.body}>
           This app is the client companion. Your coach dashboard lives on the web — sign

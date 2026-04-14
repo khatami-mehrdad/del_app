@@ -11,9 +11,11 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Audio } from 'expo-av';
 import { colors, fonts } from '@/lib/theme';
 import { useAuth } from '@/lib/auth-context';
 import { useMessages, sendMessage, markMessagesRead } from '@/lib/hooks';
+import { useVoiceNote } from '@/lib/use-voice-note';
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -33,13 +35,42 @@ function formatDate(iso: string) {
   return d.toLocaleDateString('en-US', { weekday: 'long' });
 }
 
-function VoiceNoteIndicator({ duration }: { duration: number }) {
+function VoiceNotePlayer({ url, duration }: { url: string; duration: number }) {
+  const [playing, setPlaying] = useState(false);
+  const soundRef = useRef<Audio.Sound | null>(null);
   const mins = Math.floor(duration / 60);
   const secs = duration % 60;
+
+  async function togglePlay() {
+    if (playing && soundRef.current) {
+      await soundRef.current.stopAsync();
+      await soundRef.current.unloadAsync();
+      soundRef.current = null;
+      setPlaying(false);
+      return;
+    }
+    try {
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false, playsInSilentModeIOS: true });
+      const { sound } = await Audio.Sound.createAsync({ uri: url });
+      soundRef.current = sound;
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          setPlaying(false);
+          sound.unloadAsync();
+          soundRef.current = null;
+        }
+      });
+      await sound.playAsync();
+      setPlaying(true);
+    } catch {
+      setPlaying(false);
+    }
+  }
+
   return (
-    <View style={styles.voiceNote}>
-      <View style={styles.playBtn}>
-        <Text style={styles.playIcon}>▶</Text>
+    <TouchableOpacity style={styles.voiceNote} onPress={togglePlay}>
+      <View style={[styles.playBtn, playing && { backgroundColor: '#C0392B' }]}>
+        <Text style={styles.playIcon}>{playing ? '■' : '▶'}</Text>
       </View>
       <View style={styles.waveform}>
         {[8, 14, 10, 16, 8, 12, 6, 14, 10, 8].map((h, i) => (
@@ -49,7 +80,7 @@ function VoiceNoteIndicator({ duration }: { duration: number }) {
       <Text style={styles.voiceDur}>
         {mins}:{secs.toString().padStart(2, '0')}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -59,6 +90,7 @@ export default function MessagesScreen() {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  const voice = useVoiceNote();
 
   useEffect(() => {
     if (program && user) {
@@ -93,10 +125,17 @@ export default function MessagesScreen() {
   }
 
   async function handleSend() {
-    if (!input.trim() || !program || !user) return;
+    if ((!input.trim() && !voice.uri) || !program || !user) return;
     setSending(true);
-    await sendMessage(program.id, user.id, input.trim());
+    await sendMessage(
+      program.id,
+      user.id,
+      input.trim(),
+      voice.uri ?? undefined,
+      voice.uri ? voice.duration : undefined
+    );
     setInput('');
+    voice.reset();
     setSending(false);
   }
 
@@ -160,7 +199,7 @@ export default function MessagesScreen() {
                   ]}
                 >
                   {msg.voice_note_url ? (
-                    <VoiceNoteIndicator duration={msg.voice_note_duration_sec ?? 0} />
+                    <VoiceNotePlayer url={msg.voice_note_url} duration={msg.voice_note_duration_sec ?? 0} />
                   ) : (
                     <Text
                       style={[
@@ -185,7 +224,27 @@ export default function MessagesScreen() {
           })}
         </ScrollView>
 
+        {voice.uri && (
+          <View style={styles.voicePreview}>
+            <Text style={styles.voicePreviewText}>
+              Voice note · {Math.floor(voice.duration / 60)}:{String(voice.duration % 60).padStart(2, '0')}
+            </Text>
+            <TouchableOpacity onPress={voice.reset}>
+              <Text style={styles.voiceRemoveText}>Remove</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.inputRow}>
+          <TouchableOpacity
+            style={[styles.micBtn, voice.recording && styles.micBtnRecording]}
+            onPress={voice.recording ? voice.stopRecording : voice.startRecording}
+          >
+            <Text style={[styles.micBtnText, voice.recording && styles.micBtnTextRecording]}>
+              {voice.recording
+                ? `${Math.floor(voice.duration / 60)}:${String(voice.duration % 60).padStart(2, '0')}`
+                : '🎤'}
+            </Text>
+          </TouchableOpacity>
           <TextInput
             style={styles.input}
             placeholder="Write a message..."
@@ -194,9 +253,9 @@ export default function MessagesScreen() {
             onChangeText={setInput}
           />
           <TouchableOpacity
-            style={[styles.sendBtn, (!input.trim() || sending) && { opacity: 0.4 }]}
+            style={[styles.sendBtn, (!input.trim() && !voice.uri || sending) && { opacity: 0.4 }]}
             onPress={handleSend}
-            disabled={!input.trim() || sending}
+            disabled={(!input.trim() && !voice.uri) || sending}
           >
             <Text style={styles.sendBtnText}>→</Text>
           </TouchableOpacity>
@@ -315,6 +374,48 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sans.extraLight,
     fontSize: 10,
     color: 'rgba(255,255,255,0.4)',
+  },
+  voicePreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.brown,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginHorizontal: 12,
+    marginTop: 8,
+  },
+  voicePreviewText: {
+    fontFamily: fonts.sans.light,
+    fontSize: 12,
+    color: colors.goldLight,
+  },
+  voiceRemoveText: {
+    fontFamily: fonts.sans.extraLight,
+    fontSize: 10,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.4)',
+  },
+  micBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.creamDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  micBtnRecording: {
+    backgroundColor: 'rgba(192,57,43,0.1)',
+  },
+  micBtnText: {
+    fontSize: 16,
+  },
+  micBtnTextRecording: {
+    fontFamily: fonts.sans.extraLight,
+    fontSize: 10,
+    color: '#C0392B',
   },
   inputRow: {
     flexDirection: 'row',

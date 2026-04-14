@@ -13,7 +13,8 @@ export default function LoginPage() {
     const hasImplicit =
       hash.includes("access_token") ||
       hash.includes("type=invite") ||
-      hash.includes("type=signup");
+      hash.includes("type=signup") ||
+      hash.includes("type=recovery");
     const hasPkce = search.includes("code=");
     if (hasImplicit || hasPkce) {
       window.location.replace(
@@ -59,7 +60,7 @@ export default function LoginPage() {
       <div className="min-h-screen bg-[#1C1410] flex items-center justify-center px-6">
         <div className="w-full max-w-sm text-center">
           <h1 className="font-serif italic text-3xl font-light text-gold-light mb-3">
-            del
+            Del
           </h1>
           <div className="mt-10 mb-6">
             <p className="font-serif text-xl font-light text-white mb-3">
@@ -96,7 +97,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-10">
           <h1 className="font-serif italic text-3xl font-light text-gold-light mb-1">
-            del
+            Del
           </h1>
           <p className="font-sans font-extralight text-[10px] tracking-[0.3em] uppercase text-white/20">
             Coach Dashboard
@@ -151,7 +152,18 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center mt-6 font-sans font-extralight text-xs text-white/30">
+        {mode === "login" && (
+          <p className="text-center mt-4 font-sans font-extralight text-xs text-white/30">
+            <a
+              href="/forgot-password"
+              className="text-white/40 underline underline-offset-2 hover:text-gold transition-colors"
+            >
+              Forgot password?
+            </a>
+          </p>
+        )}
+
+        <p className="text-center mt-4 font-sans font-extralight text-xs text-white/30">
           {mode === "login" ? (
             <>
               New here?{" "}

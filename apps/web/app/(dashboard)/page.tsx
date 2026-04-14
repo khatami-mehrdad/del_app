@@ -19,14 +19,14 @@ export default function DashboardHome() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="font-serif italic text-xl text-gold-light animate-pulse">del</p>
+        <p className="font-serif italic text-xl text-gold-light animate-pulse">Del</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-6 text-center">
-      <p className="font-serif italic text-3xl font-light text-gold-light mb-3">del</p>
+      <p className="font-serif italic text-3xl font-light text-gold-light mb-3">Del</p>
       <p className="font-sans font-extralight text-sm text-brown-light mb-8 max-w-xs leading-relaxed">
         Welcome. Add your first client to get started.
       </p>

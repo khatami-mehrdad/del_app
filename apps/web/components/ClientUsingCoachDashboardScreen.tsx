@@ -14,7 +14,7 @@ export function ClientUsingCoachDashboardScreen() {
 
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-cream px-8 text-center">
-      <p className="mb-4 font-serif text-3xl font-light italic text-gold-light">del</p>
+      <p className="mb-4 font-serif text-3xl font-light italic text-gold-light">Del</p>
       <h1 className="mb-3 font-serif text-xl font-light text-brown">Client account</h1>
       <p className="mb-8 max-w-sm font-sans text-sm font-extralight leading-relaxed text-brown-light">
         This site is the coach dashboard. Your companion experience is in the mobile app — sign

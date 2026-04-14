@@ -20,7 +20,7 @@ function DashboardGuard({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen items-center justify-center bg-cream">
         <div className="text-center px-6">
           <p className="font-serif italic text-xl text-gold-light animate-pulse">
-            del
+            Del
           </p>
           {!loading && (
             <p className="mt-3 font-sans font-extralight text-[10px] tracking-[0.2em] uppercase text-brown-light">
@@ -39,7 +39,7 @@ function DashboardGuard({ children }: { children: React.ReactNode }) {
   if (profile?.role !== "coach") {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-cream px-8 text-center">
-        <p className="mb-4 font-serif text-3xl font-light italic text-gold-light">del</p>
+        <p className="mb-4 font-serif text-3xl font-light italic text-gold-light">Del</p>
         <h1 className="mb-3 font-serif text-xl font-light text-brown">
           Account setup issue
         </h1>

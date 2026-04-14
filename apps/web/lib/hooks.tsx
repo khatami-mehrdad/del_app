@@ -72,12 +72,18 @@ export function ClientsProvider({ children }: { children: React.ReactNode }): Re
 
     const items: ClientListItem[] = await Promise.all(
       (programs as ClientProgramRow[]).map(async (program) => {
-        const { count } = await supabase
+        const { count: msgCount } = await supabase
           .from("messages")
           .select("*", { count: "exact", head: true })
           .eq("program_id", program.id)
           .neq("sender_id", user.id)
           .is("read_at", null);
+
+        const { count: ciCount } = await supabase
+          .from("checkins")
+          .select("*", { count: "exact", head: true })
+          .eq("program_id", program.id)
+          .is("coach_read_at", null);
 
         const weeksSinceStart = Math.max(
           1,
@@ -94,7 +100,7 @@ export function ClientsProvider({ children }: { children: React.ReactNode }): Re
         return {
           program,
           client: program.client,
-          unread: count ?? 0,
+          unread: (msgCount ?? 0) + (ciCount ?? 0),
           currentWeek: Math.min(weeksSinceStart, program.total_sessions),
           currentMonth: Math.min(currentMonth, program.total_months),
           pending,
@@ -120,7 +126,7 @@ export function ClientsProvider({ children }: { children: React.ReactNode }): Re
     if (!user) return;
 
     const channel = supabase
-      .channel(`sidebar-messages-${user.id}`)
+      .channel(`sidebar-activity-${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -132,6 +138,17 @@ export function ClientsProvider({ children }: { children: React.ReactNode }): Re
           if (payload.new && (payload.new as { sender_id: string }).sender_id !== user.id) {
             void fetchClients();
           }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "checkins",
+        },
+        () => {
+          void fetchClients();
         }
       )
       .subscribe();
@@ -301,12 +318,30 @@ export function useMessages(programId: string | null) {
 export async function sendMessage(
   programId: string,
   senderId: string,
-  text: string
+  text: string,
+  voiceBlob?: Blob,
+  voiceDuration?: number
 ) {
+  let voiceUrl: string | null = null;
+
+  if (voiceBlob) {
+    const fileName = `messages/${programId}/${Date.now()}.webm`;
+    const { error: upErr } = await supabase.storage
+      .from("voice-notes")
+      .upload(fileName, voiceBlob, { contentType: "audio/webm" });
+
+    if (!upErr) {
+      const { data } = supabase.storage.from("voice-notes").getPublicUrl(fileName);
+      voiceUrl = data.publicUrl;
+    }
+  }
+
   const { error } = await supabase.from("messages").insert({
     program_id: programId,
     sender_id: senderId,
-    content_text: text,
+    content_text: text || null,
+    voice_note_url: voiceUrl,
+    voice_note_duration_sec: voiceDuration ?? null,
   });
   return { error: error?.message ?? null };
 }
@@ -356,6 +391,14 @@ export async function markMessagesRead(programId: string, userId: string) {
     .eq("program_id", programId)
     .neq("sender_id", userId)
     .is("read_at", null);
+}
+
+export async function markCheckinsRead(programId: string) {
+  await supabase
+    .from("checkins")
+    .update({ coach_read_at: new Date().toISOString() })
+    .eq("program_id", programId)
+    .is("coach_read_at", null);
 }
 
 export async function inviteClient(

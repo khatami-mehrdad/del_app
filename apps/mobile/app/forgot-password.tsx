@@ -12,20 +12,24 @@ import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts } from '@/lib/theme';
 
-export default function LoginScreen() {
+const WEB_ORIGIN =
+  process.env.EXPO_PUBLIC_WEB_APP_HOST
+    ? `https://${process.env.EXPO_PUBLIC_WEB_APP_HOST.replace(/^https?:\/\//, '').split('/')[0]}`
+    : 'https://del.saharshams.com';
+
+export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
-  async function handleLogin() {
+  async function handleReset() {
     setError(null);
     setLoading(true);
 
-    const { error: err } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${WEB_ORIGIN}/auth/callback#type=recovery`,
     });
 
     setLoading(false);
@@ -33,8 +37,29 @@ export default function LoginScreen() {
     if (err) {
       setError(err.message);
     } else {
-      router.replace('/(tabs)');
+      setSent(true);
     }
+  }
+
+  if (sent) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.inner}>
+          <Text style={styles.logo}>Del</Text>
+          <Text style={styles.title}>Check your email</Text>
+          <Text style={styles.body}>
+            We sent a password reset link to {email}. Open the link in a browser
+            to set your new password, then come back here to sign in.
+          </Text>
+          <TouchableOpacity
+            style={styles.btn}
+            onPress={() => router.replace('/login')}
+          >
+            <Text style={styles.btnText}>Back to sign in</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -44,10 +69,10 @@ export default function LoginScreen() {
     >
       <View style={styles.inner}>
         <Text style={styles.logo}>Del</Text>
-        <Text style={styles.subtitle}>Companion App</Text>
-        <Text style={styles.helper}>
-
-          Sign in with the email and password your coach set up for you. New here? Check your email for an invite from your coach.
+        <Text style={styles.subtitle}>Reset password</Text>
+        <Text style={styles.body}>
+          Enter your email and we&apos;ll send you a link to reset your
+          password.
         </Text>
 
         <TextInput
@@ -59,32 +84,24 @@ export default function LoginScreen() {
           autoCapitalize="none"
           keyboardType="email-address"
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="rgba(255,255,255,0.25)"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
 
         {error && <Text style={styles.error}>{error}</Text>}
 
         <TouchableOpacity
           style={[styles.btn, loading && styles.btnDisabled]}
-          onPress={handleLogin}
+          onPress={handleReset}
           disabled={loading}
         >
           <Text style={styles.btnText}>
-            {loading ? '...' : 'Sign in'}
+            {loading ? '...' : 'Send reset link'}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.forgotLink}
-          onPress={() => router.push('/forgot-password' as never)}
+          style={styles.backLink}
+          onPress={() => router.back()}
         >
-          <Text style={styles.forgotLinkText}>Forgot password?</Text>
+          <Text style={styles.backLinkText}>Back to sign in</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -116,10 +133,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
   },
-  helper: {
+  title: {
+    fontFamily: fonts.serif.regular,
+    fontSize: 22,
+    color: colors.white,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  body: {
     fontFamily: fonts.sans.light,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 20,
     color: 'rgba(255,255,255,0.42)',
     textAlign: 'center',
     marginBottom: 24,
@@ -157,14 +181,14 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: colors.white,
   },
-  forgotLink: {
+  backLink: {
     marginTop: 20,
     alignItems: 'center',
   },
-  forgotLinkText: {
+  backLinkText: {
     fontFamily: fonts.sans.extraLight,
     fontSize: 12,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.gold,
     textDecorationLine: 'underline',
   },
 });

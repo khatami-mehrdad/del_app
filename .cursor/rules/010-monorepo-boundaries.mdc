@@ -7,8 +7,9 @@ alwaysApply: true
 
 - `apps/web` is the coach dashboard.
 - `apps/mobile` is the client companion app.
-- `packages/shared` holds shared product types and contracts.
-- `packages/supabase-client` holds shared Supabase client helpers and generated database types.
+- `packages/shared` (`@del/shared`) holds shared product types, schemas, and constants.
+- `packages/supabase-client` (`@del/supabase`) holds shared Supabase client helpers and generated database types.
+- `packages/data` (`@del/data`) holds shared queries, mutations, and auth hooks consumed by both apps.
 - Put cross-app domain logic in shared packages when it is truly reused; avoid copy-pasting logic between web and mobile.
 - Do not move app-specific UI, routing, or platform behavior into shared packages.
 - When changing shared contracts, think through impact on both web and mobile before editing.

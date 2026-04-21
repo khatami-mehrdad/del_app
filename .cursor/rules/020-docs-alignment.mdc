@@ -1,0 +1,41 @@
+---
+description: Keep docs/ in sync with the code that it describes
+alwaysApply: true
+---
+
+# Docs-code alignment
+
+The files in `docs/` are the source of truth for how this repo is meant to be
+understood and operated. When you change code, update the docs in the same change.
+
+## What to update, and when
+
+| If you change... | Also update... |
+|---|---|
+| Monorepo layout (add/remove/rename a workspace in `apps/` or `packages/`) | `docs/CONTEXT.md` "What this repo is" and `.cursor/rules/010-monorepo-boundaries.mdc` |
+| Routes under `apps/web/app/` (add/remove/rename a page, route group, or API handler) | `docs/CONTEXT.md` "Main routes today" |
+| Env vars read by `apps/web` or `apps/mobile` (new/removed/renamed) | `docs/CONTEXT.md` env sections + the relevant `.env.example` + `docs/github-actions-automation.md` if it is synced via GitHub Environments |
+| `supabase/migrations/*`, `supabase/functions/*`, or `supabase/templates/*` | `docs/CONTEXT.md` "Supabase model summary" |
+| `apps/mobile/app.config.ts` host/bundle/links config | `docs/universal-links-setup.md` and `docs/CONTEXT.md` if env vars changed |
+| `.github/workflows/*.yml` | `docs/github-actions-automation.md` and, for mobile release flow, `docs/launch-checklist.md` |
+| APK hosting / Vercel Blob wiring | `docs/apk-hosting-blob.md` |
+| App metadata (bundle id, name, category, privacy) | `docs/app-store-listing.md` |
+
+## Before finishing a change
+
+Verify the touched area against the docs one more time:
+
+- Any route, env var, package name, or workflow referenced in docs still resolves in the repo.
+- Any new route, env var, package, migration, or workflow is mentioned in the right doc.
+- Filenames and workflow names in docs match the files on disk (e.g. `eas-mobile-build.yml`, not `eas-build.yml`).
+
+If a doc statement no longer matches the code, update the doc in the same change rather than leaving it as drift.
+
+## When code and docs disagree
+
+Treat it as a bug. Either:
+
+- fix the code to match documented behavior, or
+- update the doc to match the new intended behavior.
+
+Do not leave the mismatch unresolved, and do not add a new doc that contradicts an existing one — update the existing doc instead.

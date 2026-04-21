@@ -74,17 +74,14 @@ After production deploy, verify:
 
 This is needed for Play Console and is likely your next blocker.
 
-Recommended URL:
+The web app already serves the page shells; what's missing is the finalized copy:
 
-- `https://del.saharshams.com/privacy`
-
-Account deletion URL (required by Play when users can have accounts):
-
-- `https://del.saharshams.com/delete-account`
+- `apps/web/app/privacy/page.tsx` → `https://del.saharshams.com/privacy`
+- `apps/web/app/delete-account/page.tsx` → `https://del.saharshams.com/delete-account`
 
 Set `NEXT_PUBLIC_ACCOUNT_DELETION_EMAIL` in Vercel (and GitHub env if you sync from there) so the page shows the correct inbox.
 
-What it needs to cover:
+What the privacy copy needs to cover:
 
 - account information
 - invite-based sign-in
@@ -93,7 +90,7 @@ What it needs to cover:
 - voice notes / audio uploads
 - how users can contact you
 
-If you want, I can wire a `privacy` page in the app next, but I need the contact details you want published there.
+Give me the contact email and legal entity name you want on the privacy page and I can fill in the copy.
 
 ### 5. Finish the Play Console declarations
 

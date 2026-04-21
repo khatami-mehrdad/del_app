@@ -10,12 +10,14 @@ The current download URL points to:
 https://github.com/khatami-mehrdad/del_app/releases/download/preview-android-latest/del-preview-android-latest.apk
 ```
 
-## Current State
+## Current State (as of 2026-04-21)
 
-- A Vercel Blob store named `apk-downloads` (`store_PdoxGtCASGFMFpb1`) was created
-  but the `BLOB_READ_WRITE_TOKEN` was not properly linked to project environment variables.
-- Several orphan stores were also created during troubleshooting:
-  `del-apk`, `del-downloads`, `del-app-apk` — these can be deleted.
+- A Vercel Blob store named `apk-downloads` (`store_PdoxGtCASGFMFpb1`) is in use.
+- `BLOB_READ_WRITE_TOKEN` is wired through the `eas-mobile-build` GitHub Action as a repository secret (see `.github/workflows/eas-mobile-build.yml`).
+- The workflow automatically uploads the preview Android APK to Blob when `publish_android_prerelease` is enabled (see step 4 below).
+- `NEXT_PUBLIC_APK_DOWNLOAD_URL` in `apps/web/.env.example` already points at the Blob URL: `https://pdoxgtcasgfmfpb1.public.blob.vercel-storage.com/del-preview-android-latest.apk`.
+- Several orphan stores were created during troubleshooting and may still need cleanup on Vercel:
+  `del-apk`, `del-downloads`, `del-app-apk`. Verify on the Vercel dashboard before deleting.
 
 ## Steps to Complete
 
@@ -69,11 +71,12 @@ Update the `NEXT_PUBLIC_APK_DOWNLOAD_URL` environment variable in:
 
 - **Local** (`apps/web/.env.local`): update `NEXT_PUBLIC_APK_DOWNLOAD_URL`
 
-### 4. Automate APK upload in CI (optional)
+### 4. Automate APK upload in CI (done)
 
-Update `.github/workflows/eas-build.yml` to upload the APK to Vercel Blob after
-the EAS build completes, so the Blob URL always has the latest APK. This replaces
-the current GitHub Release upload step.
+`.github/workflows/eas-mobile-build.yml` uploads the preview Android APK to Vercel
+Blob after the EAS build completes, using `secrets.BLOB_READ_WRITE_TOKEN` and
+`npx vercel blob put`. Enable it by setting `publish_android_prerelease: true`
+when running the workflow (only active on the `preview` environment).
 
 ### 5. Clean up orphan Blob stores
 

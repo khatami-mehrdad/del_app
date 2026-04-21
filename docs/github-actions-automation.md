@@ -59,6 +59,7 @@ Add these as **Repository secrets** in GitHub:
 | `EXPO_TOKEN` | Lets Actions call EAS build / submit |
 | `APP_STORE_CONNECT_PRIVATE_KEY` | The raw `.p8` contents for App Store Connect API auth |
 | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | Google Play service account JSON for Android submission |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob read/write token used by `eas-mobile-build` to publish the preview Android APK |
 
 Notes:
 
@@ -131,6 +132,7 @@ This is intentionally environment-scoped so preview and production can diverge l
 - Pushes the GitHub mobile env values into the matching **EAS environment**
 - Waits for EAS builds to finish
 - Uploads build metadata as a workflow artifact
+- When `publish_android_prerelease: true` is passed on the `preview` environment, uploads the built APK to the `apk-downloads` Vercel Blob store using `BLOB_READ_WRITE_TOKEN` so the public APK URL is always fresh (see [`apk-hosting-blob.md`](./apk-hosting-blob.md))
 
 ### `release-mobile.yml`
 

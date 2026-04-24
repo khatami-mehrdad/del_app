@@ -12,6 +12,9 @@ const nextSubmit = {
   preview: {
     ...(easJson.submit?.preview ?? {}),
   },
+  internal: {
+    ...(easJson.submit?.internal ?? {}),
+  },
   production: {
     ...(easJson.submit?.production ?? {}),
   },
@@ -20,6 +23,10 @@ const nextSubmit = {
 if (ascAppId) {
   nextSubmit.preview.ios = {
     ...(nextSubmit.preview.ios ?? {}),
+    ascAppId,
+  };
+  nextSubmit.internal.ios = {
+    ...(nextSubmit.internal.ios ?? {}),
     ascAppId,
   };
   nextSubmit.production.ios = {
@@ -31,6 +38,11 @@ if (ascAppId) {
 if (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON) {
   nextSubmit.preview.android = {
     ...(nextSubmit.preview.android ?? {}),
+    serviceAccountKeyPath: googleServiceAccountPath,
+    track: "internal",
+  };
+  nextSubmit.internal.android = {
+    ...(nextSubmit.internal.android ?? {}),
     serviceAccountKeyPath: googleServiceAccountPath,
     track: "internal",
   };

@@ -139,7 +139,21 @@ This is intentionally environment-scoped so preview and production can diverge l
 - Calls the reusable mobile build workflow
 - Uploads iOS builds to **App Store Connect / TestFlight**
 - Uploads Android builds to **Google Play**
-- Uses the selected GitHub Environment to scope production vs preview behavior
+
+The `environment_name` input picks the release target:
+
+| `environment_name` | EAS build profile | Android artifact | Play track | iOS | GitHub Environment | GitHub Release / Blob APK |
+|---|---|---|---|---|---|---|
+| `preview` | `preview` | APK | — (no Play upload) | — (no TestFlight upload) | `preview` | yes (GitHub Release + Vercel Blob) |
+| `internal` | `internal` | AAB | `internal` | TestFlight | `preview` | no |
+| `production` | `production` | AAB | `production` | TestFlight | `production` | no |
+
+`internal` is the normal iteration loop once the app is in Play Console — it builds an AAB, uploads it straight to the Internal testing track via the Play Developer API, and bumps your testers' build over-the-air. No Console clicks.
+
+Notes:
+
+- `internal` and `preview` both use the `preview` GitHub Environment (same Supabase backend, same `EXPO_PUBLIC_*` values), so you do not need a third environment set.
+- `internal` and `production` profiles both `autoIncrement` the Android `versionCode`, otherwise Play rejects the upload as a duplicate.
 
 ---
 

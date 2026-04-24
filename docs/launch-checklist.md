@@ -198,16 +198,16 @@ Only after that can you apply for production access.
 
 After Play + Apple credentials are in place:
 
-1. Run `EAS mobile build` for `preview`
-2. Leave `publish_android_prerelease` enabled when you want the latest Android preview APK to be uploaded to GitHub Releases automatically
-3. Share the stable prerelease page `preview-android-latest` or its direct APK asset URL
-4. Run `Release mobile` when you want store submission
+1. Run `EAS mobile build` for `preview` if you just want an APK for off-store side-loading.
+2. Leave `publish_android_prerelease` enabled when you want that preview APK to be uploaded to GitHub Releases / Vercel Blob automatically.
+3. Run `Release mobile` with `environment_name = internal` for the normal Play iteration loop — it builds an AAB and uploads it straight to Play's **Internal testing** track via the Play Developer API (no Play Console clicks).
+4. Run `Release mobile` with `environment_name = production` when you are ready for the store.
 
-What that does:
+What each target does:
 
-- iOS: uploads to App Store Connect / TestFlight
-- Android: submits to Google Play
-- Preview Android builds can also refresh a stable GitHub prerelease APK for direct side-loading outside the stores
+- `preview`: preview APK, posted to GitHub Releases + Vercel Blob. No Play, no TestFlight.
+- `internal`: AAB → Play internal testing, iOS → TestFlight.
+- `production`: AAB → Play production, iOS → TestFlight.
 
 ### 10. iOS values you still need to collect
 

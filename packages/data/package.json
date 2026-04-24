@@ -17,7 +17,6 @@
   },
   "devDependencies": {
     "@types/react": "*",
-    "react": "*",
     "typescript": "^5"
   }
 }

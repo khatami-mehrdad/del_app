@@ -4,12 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       environment_name:
-        description: "GitHub environment and EAS release target"
+        description: "Release target (preview = side-load APK, internal = Play internal testing, production = store release)"
         required: true
-        default: production
+        default: internal
         type: choice
         options:
           - preview
+          - internal
           - production
       platform:
         description: "Platform(s) to release"
@@ -22,7 +23,7 @@ on:
           - android
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: release-mobile-${{ github.workflow }}-${{ github.ref }}-${{ inputs.environment_name }}
@@ -32,16 +33,17 @@ jobs:
   build:
     uses: ./.github/workflows/eas-mobile-build.yml
     with:
-      environment_name: ${{ inputs.environment_name }}
-      profile: ${{ inputs.environment_name == 'production' && 'production' || 'preview' }}
+      environment_name: ${{ inputs.environment_name == 'production' && 'production' || 'preview' }}
+      profile: ${{ inputs.environment_name }}
       platform: ${{ inputs.platform }}
+      publish_android_prerelease: ${{ inputs.environment_name == 'preview' }}
     secrets: inherit
 
   submit-ios:
     needs: build
-    if: (inputs.platform == 'all' || inputs.platform == 'ios') && needs.build.outputs.ios_build_id != ''
+    if: (inputs.platform == 'all' || inputs.platform == 'ios') && inputs.environment_name != 'preview' && needs.build.outputs.ios_build_id != ''
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment_name }}
+    environment: ${{ inputs.environment_name == 'production' && 'production' || 'preview' }}
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       EXPO_ASC_API_KEY_PATH: ./.secrets/AuthKey.p8
@@ -88,7 +90,7 @@ jobs:
         working-directory: apps/mobile
         run: >
           eas submit --platform ios
-          --profile "${{ inputs.environment_name == 'production' && 'production' || 'preview' }}"
+          --profile "${{ inputs.environment_name }}"
           --id "${{ needs.build.outputs.ios_build_id }}"
           --non-interactive
           --wait
@@ -106,9 +108,9 @@ jobs:
 
   submit-android:
     needs: build
-    if: (inputs.platform == 'all' || inputs.platform == 'android') && needs.build.outputs.android_build_id != ''
+    if: (inputs.platform == 'all' || inputs.platform == 'android') && inputs.environment_name != 'preview' && needs.build.outputs.android_build_id != ''
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment_name }}
+    environment: ${{ inputs.environment_name == 'production' && 'production' || 'preview' }}
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       APP_STORE_CONNECT_APP_ID: ${{ vars.APP_STORE_CONNECT_APP_ID }}
@@ -154,17 +156,20 @@ jobs:
         working-directory: apps/mobile
         run: >
           eas submit --platform android
-          --profile "${{ inputs.environment_name == 'production' && 'production' || 'preview' }}"
+          --profile "${{ inputs.environment_name }}"
           --id "${{ needs.build.outputs.android_build_id }}"
           --non-interactive
           --wait
 
       - name: Publish Android release summary
+        env:
+          PLAY_TRACK: ${{ inputs.environment_name == 'production' && 'production' || 'internal' }}
         run: |
           {
             echo "## Android release"
             echo
             echo "- Build ID: ${{ needs.build.outputs.android_build_id }}"
-            echo "- Environment: ${{ inputs.environment_name }}"
+            echo "- Release target: ${{ inputs.environment_name }}"
+            echo "- Play track: ${PLAY_TRACK}"
             echo "- Result: Submitted to Google Play"
           } >> "$GITHUB_STEP_SUMMARY"

@@ -51,15 +51,23 @@ export function usePushRegistration() {
     if (!user || registered.current) return;
 
     async function register() {
-      const token = await registerForPushNotifications();
-      if (!token || !user) return;
+      try {
+        const token = await registerForPushNotifications();
+        if (!token || !user) return;
 
-      const platform = Platform.OS === "ios" ? "ios" : "android";
-      await supabase.from("push_tokens").upsert(
-        { user_id: user.id, token, platform },
-        { onConflict: "token" }
-      );
-      registered.current = true;
+        const platform = Platform.OS === "ios" ? "ios" : "android";
+        const { error } = await supabase.from("push_tokens").upsert(
+          { user_id: user.id, token, platform },
+          { onConflict: "token" }
+        );
+        if (error) {
+          console.warn("Push token registration failed:", error.message);
+          return;
+        }
+        registered.current = true;
+      } catch (error) {
+        console.warn("Push notification setup failed:", error);
+      }
     }
 
     void register();

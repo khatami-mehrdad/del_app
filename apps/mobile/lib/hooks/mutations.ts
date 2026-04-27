@@ -1,6 +1,13 @@
 import { markMessagesRead as sharedMarkMessagesRead } from '@del/data';
 import { supabase } from '../supabase';
 
+function localDateString(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 async function uploadVoiceNote(
   folder: 'checkins' | 'messages',
   programId: string,
@@ -33,8 +40,11 @@ export async function submitCheckin(
   voiceUri?: string,
   voiceDuration?: number
 ) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateString();
   const voiceUrl = voiceUri ? await uploadVoiceNote('checkins', programId, voiceUri) : null;
+  if (voiceUri && !voiceUrl) {
+    return { error: 'Voice note upload failed. Please try again.' };
+  }
 
   const { error } = await supabase.from('checkins').insert({
     program_id: programId,
@@ -49,7 +59,7 @@ export async function submitCheckin(
 }
 
 export async function markPracticeDone(programId: string, clientId: string) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateString();
 
   const { data: alreadyDone } = await supabase
     .from('checkins')
@@ -96,6 +106,9 @@ export async function sendMessage(
   voiceDuration?: number
 ) {
   const voiceUrl = voiceUri ? await uploadVoiceNote('messages', programId, voiceUri) : null;
+  if (voiceUri && !voiceUrl) {
+    return { error: 'Voice note upload failed. Please try again.' };
+  }
 
   const { error } = await supabase.from('messages').insert({
     program_id: programId,

@@ -4,18 +4,21 @@ import type { Practice } from '@del/shared';
 
 interface Props {
   practice: Practice | null;
+  loading: boolean;
   todayDone: boolean;
   marking: boolean;
   onMarkDone: () => void;
 }
 
-export function PracticeCard({ practice, todayDone, marking, onMarkDone }: Props) {
+export function PracticeCard({ practice, loading, todayDone, marking, onMarkDone }: Props) {
   if (!practice) {
     return (
       <View style={styles.practiceCard}>
         <Text style={styles.practiceTag}>This week's practice</Text>
         <Text style={[styles.practiceDesc, { marginBottom: 0 }]}>
-          No practice posted yet — check back after your session.
+          {loading
+            ? 'Loading your practice...'
+            : 'No practice posted yet - check back after your session.'}
         </Text>
       </View>
     );

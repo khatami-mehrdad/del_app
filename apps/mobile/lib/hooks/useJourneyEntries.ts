@@ -13,10 +13,22 @@ export function useJourneyEntries(programId: string | undefined) {
       setLoading(false);
       return;
     }
-    fetchJourneyEntries(supabase, programId).then((data) => {
-      setEntries(data);
-      setLoading(false);
-    });
+    let cancelled = false;
+    setLoading(true);
+    fetchJourneyEntries(supabase, programId)
+      .then((data) => {
+        if (!cancelled) setEntries(data);
+      })
+      .catch((error) => {
+        console.warn('Failed to load journey entries:', error);
+        if (!cancelled) setEntries([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [programId]);
 
   return { entries, loading };

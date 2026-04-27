@@ -17,11 +17,18 @@ export function getTodayIndex(): number {
   return (new Date().getDay() + 6) % 7; // 0=Mon
 }
 
+function localDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function buildStreakDone(checkins: CheckIn[], todayIndex: number): boolean[] {
   return DAYS.map((_, i) => {
     const monday = new Date();
     monday.setDate(monday.getDate() - todayIndex + i);
-    const dateStr = monday.toISOString().split('T')[0];
+    const dateStr = localDateString(monday);
     return checkins.some(
       (c) => c.checkin_date === dateStr && c.practice_completed
     );

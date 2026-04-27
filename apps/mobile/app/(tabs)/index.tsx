@@ -5,12 +5,12 @@ import { colors, fonts } from '@/lib/theme';
 import { useAuth } from '@/lib/auth-context';
 import { usePractice, useWeekCheckins, submitCheckin, markPracticeDone } from '@/lib/hooks';
 import { useVoiceNote } from '@/lib/use-voice-note';
-import { getGreeting, getDayName, getTodayIndex, buildStreakDone } from './home/helpers';
-import { HomeEmptyState } from './home/HomeEmptyState';
-import { StreakRow } from './home/StreakRow';
-import { PracticeCard } from './home/PracticeCard';
-import { DailyCheckinCard } from './home/DailyCheckinCard';
-import { WeekCheckinHistory } from './home/WeekCheckinHistory';
+import { getGreeting, getDayName, getTodayIndex, buildStreakDone } from '@/components/home/helpers';
+import { HomeEmptyState } from '@/components/home/HomeEmptyState';
+import { StreakRow } from '@/components/home/StreakRow';
+import { PracticeCard } from '@/components/home/PracticeCard';
+import { DailyCheckinCard } from '@/components/home/DailyCheckinCard';
+import { WeekCheckinHistory } from '@/components/home/WeekCheckinHistory';
 
 export default function HomeScreen() {
   const { profile, program, user, signOut } = useAuth();
@@ -25,7 +25,7 @@ export default function HomeScreen() {
     : 1;
   const currentWeek = Math.min(weeksSinceStart, program?.total_sessions ?? 12);
 
-  const { practice } = usePractice(program?.id, currentWeek);
+  const { practice, loading: practiceLoading } = usePractice(program?.id, currentWeek);
   const { checkins, refetch: refetchCheckins } = useWeekCheckins(program?.id);
 
   const todayIndex = getTodayIndex();
@@ -35,33 +35,47 @@ export default function HomeScreen() {
   async function handleMarkDone() {
     if (!program || !user || marking || todayDone) return;
     setMarking(true);
-    await markPracticeDone(program.id, user.id);
-    await refetchCheckins();
-    setMarking(false);
+    try {
+      const result = await markPracticeDone(program.id, user.id);
+      if (result.error) {
+        Alert.alert('Practice update failed', result.error);
+        return;
+      }
+      await refetchCheckins();
+    } catch {
+      Alert.alert('Practice update failed', 'Please try again.');
+    } finally {
+      setMarking(false);
+    }
   }
 
   async function handleSendCheckin() {
     if (!program || !user) return;
     if (!checkinText.trim() && !voice.uri) return;
     setSending(true);
-    const result = await submitCheckin(
-      program.id,
-      user.id,
-      checkinText.trim() || null,
-      false,
-      voice.uri ?? undefined,
-      voice.uri ? voice.duration : undefined
-    );
-    setSending(false);
-    if (result.error) {
-      Alert.alert('Check-in failed', result.error);
-      return;
+    try {
+      const result = await submitCheckin(
+        program.id,
+        user.id,
+        checkinText.trim() || null,
+        false,
+        voice.uri ?? undefined,
+        voice.uri ? voice.duration : undefined
+      );
+      if (result.error) {
+        Alert.alert('Check-in failed', result.error);
+        return;
+      }
+      setCheckinText('');
+      voice.reset();
+      setJustSent(true);
+      setTimeout(() => setJustSent(false), 3000);
+      await refetchCheckins();
+    } catch {
+      Alert.alert('Check-in failed', 'Please try again.');
+    } finally {
+      setSending(false);
     }
-    setCheckinText('');
-    voice.reset();
-    setJustSent(true);
-    setTimeout(() => setJustSent(false), 3000);
-    await refetchCheckins();
   }
 
   if (!profile || !program) {
@@ -85,6 +99,7 @@ export default function HomeScreen() {
         <StreakRow streakDone={streakDone} todayIndex={todayIndex} />
         <PracticeCard
           practice={practice}
+          loading={practiceLoading}
           todayDone={todayDone}
           marking={marking}
           onMarkDone={handleMarkDone}

@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Audio } from 'expo-av';
@@ -94,9 +95,9 @@ export default function MessagesScreen() {
 
   useEffect(() => {
     if (program && user) {
-      markMessagesRead(program.id, user.id);
+      void markMessagesRead(program.id, user.id);
     }
-  }, [messages.length]);
+  }, [messages.length, program, user]);
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
@@ -127,16 +128,25 @@ export default function MessagesScreen() {
   async function handleSend() {
     if ((!input.trim() && !voice.uri) || !program || !user) return;
     setSending(true);
-    await sendMessage(
-      program.id,
-      user.id,
-      input.trim(),
-      voice.uri ?? undefined,
-      voice.uri ? voice.duration : undefined
-    );
-    setInput('');
-    voice.reset();
-    setSending(false);
+    try {
+      const result = await sendMessage(
+        program.id,
+        user.id,
+        input.trim(),
+        voice.uri ?? undefined,
+        voice.uri ? voice.duration : undefined
+      );
+      if (result.error) {
+        Alert.alert('Message failed', result.error);
+        return;
+      }
+      setInput('');
+      voice.reset();
+    } catch {
+      Alert.alert('Message failed', 'Please try again.');
+    } finally {
+      setSending(false);
+    }
   }
 
   if (loading) {

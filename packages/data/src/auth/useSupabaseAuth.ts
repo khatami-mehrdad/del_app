@@ -45,21 +45,37 @@ export function useSupabaseAuth<Extras = null>(
         if (!cancelled) setState({ ...EMPTY });
         return;
       }
-      const profile = await fetchProfile(supabase, session.user.id);
-      const extras = loadExtrasRef.current
-        ? await loadExtrasRef.current(session.user.id, profile)
-        : null;
-      if (cancelled) return;
-      setState({
-        user: session.user,
-        profile,
-        session,
-        extras: (extras ?? null) as Extras | null,
-        loading: false,
-      });
+      try {
+        const profile = await fetchProfile(supabase, session.user.id);
+        const extras = loadExtrasRef.current
+          ? await loadExtrasRef.current(session.user.id, profile)
+          : null;
+        if (cancelled) return;
+        setState({
+          user: session.user,
+          profile,
+          session,
+          extras: (extras ?? null) as Extras | null,
+          loading: false,
+        });
+      } catch {
+        if (cancelled) return;
+        setState({
+          user: session.user,
+          profile: null,
+          session,
+          extras: null,
+          loading: false,
+        });
+      }
     }
 
-    supabase.auth.getSession().then(({ data }) => hydrate(data.session));
+    supabase.auth
+      .getSession()
+      .then(({ data }) => hydrate(data.session))
+      .catch(() => {
+        if (!cancelled) setState({ ...EMPTY });
+      });
 
     const {
       data: { subscription },

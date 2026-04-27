@@ -16,12 +16,18 @@ export function useMessages(programId: string | undefined) {
 
     let cancelled = false;
 
-    fetchMessages(supabase, programId).then((data) => {
-      if (!cancelled) {
-        setMessages(data);
-        setLoading(false);
-      }
-    });
+    setLoading(true);
+    fetchMessages(supabase, programId)
+      .then((data) => {
+        if (!cancelled) setMessages(data);
+      })
+      .catch((error) => {
+        console.warn('Failed to load messages:', error);
+        if (!cancelled) setMessages([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
     const unsubscribe = subscribeToMessages(supabase, programId, (msg) => {
       if (!cancelled) setMessages((prev) => [...prev, msg]);

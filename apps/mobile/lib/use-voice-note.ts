@@ -59,6 +59,7 @@ export function useVoiceNote(): VoiceNoteHook & { uri: string | null } {
 
       const fileUri = recordingRef.current.getURI();
       recordingRef.current = null;
+      if (!fileUri) return null;
       setUri(fileUri);
       return fileUri;
     } catch (err: any) {

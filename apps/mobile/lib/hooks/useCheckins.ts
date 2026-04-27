@@ -13,9 +13,16 @@ export function useWeekCheckins(programId: string | undefined) {
       setLoading(false);
       return;
     }
-    const data = await fetchWeekCheckins(supabase, programId);
-    setCheckins(data);
-    setLoading(false);
+    setLoading(true);
+    try {
+      const data = await fetchWeekCheckins(supabase, programId);
+      setCheckins(data);
+    } catch (error) {
+      console.warn('Failed to load check-ins:', error);
+      setCheckins([]);
+    } finally {
+      setLoading(false);
+    }
   }, [programId]);
 
   useEffect(() => {

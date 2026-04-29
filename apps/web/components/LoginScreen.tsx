@@ -36,22 +36,26 @@ export function LoginScreen() {
     setError(null);
     setSubmitting(true);
 
-    if (mode === "login") {
-      const result = await signIn(email, password);
-      setSubmitting(false);
-      if (result.error) {
-        setError(result.error);
+    try {
+      if (mode === "login") {
+        const result = await signIn(email.trim(), password);
+        if (result.error) {
+          setError(result.error);
+        } else {
+          router.replace("/");
+        }
       } else {
-        router.push("/");
+        const result = await signUp(email.trim(), password, fullName.trim());
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setConfirmationSent(true);
+        }
       }
-    } else {
-      const result = await signUp(email, password, fullName);
+    } catch {
+      setError("Sign-in failed. Please check your connection and try again.");
+    } finally {
       setSubmitting(false);
-      if (result.error) {
-        setError(result.error);
-      } else {
-        setConfirmationSent(true);
-      }
     }
   }
 
@@ -144,7 +148,9 @@ export function LoginScreen() {
             className="w-full bg-gold text-white py-3 rounded-full font-sans font-light text-xs tracking-[0.2em] uppercase hover:bg-gold-light transition-colors disabled:opacity-50"
           >
             {submitting
-              ? "..."
+              ? mode === "login"
+                ? "Signing in..."
+                : "Creating..."
               : mode === "login"
                 ? "Sign in"
                 : "Create account"}

@@ -27,6 +27,7 @@ Main routes today:
 - `/delete-account`: account deletion contact page
 - `/.well-known/apple-app-site-association` and `/.well-known/assetlinks.json`: universal/app link association files served from env
 - `/api/add-client`: creates a client user + program, sends invite
+- `/api/ensure-profile`: repairs a missing profile row for an authenticated user when auth metadata has a valid role
 - `/api/client-status`, `/api/resend-invite`, `/api/delete-client`: client management endpoints
 
 There is no public landing page yet.
@@ -82,6 +83,7 @@ Where they are used:
 - `apps/web/proxy.ts`: dashboard route auth check
 - `apps/web/lib/supabase-server.ts`: server-side client helper
 - `apps/web/app/api/add-client/route.ts`: admin client for creating users/programs, uses `NEXT_PUBLIC_SITE_URL` for invite redirects
+- `apps/web/app/api/ensure-profile/route.ts`: admin client for repairing missing profile rows after auth sign-in
 - `apps/web/app/.well-known/apple-app-site-association/route.ts` and `assetlinks.json/route.ts`: read the universal/app link env vars
 - `apps/web/app/client-invite/ClientInviteScreen.tsx`: reads `NEXT_PUBLIC_APK_DOWNLOAD_URL`
 - `apps/web/app/delete-account/page.tsx`: reads `NEXT_PUBLIC_ACCOUNT_DELETION_EMAIL`

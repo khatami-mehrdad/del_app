@@ -17,6 +17,8 @@ export type LoadExtras<Extras> = (
   profile: Profile | null
 ) => Promise<Extras | null>;
 
+export type RecoverProfile = (session: Session) => Promise<Profile | null>;
+
 const EMPTY = {
   user: null,
   profile: null,
@@ -27,7 +29,8 @@ const EMPTY = {
 
 export function useSupabaseAuth<Extras = null>(
   supabase: SupabaseClient,
-  loadExtras?: LoadExtras<Extras>
+  loadExtras?: LoadExtras<Extras>,
+  recoverProfile?: RecoverProfile
 ) {
   const [state, setState] = useState<SupabaseAuthState<Extras>>({
     ...EMPTY,
@@ -36,6 +39,8 @@ export function useSupabaseAuth<Extras = null>(
 
   const loadExtrasRef = useRef(loadExtras);
   loadExtrasRef.current = loadExtras;
+  const recoverProfileRef = useRef(recoverProfile);
+  recoverProfileRef.current = recoverProfile;
 
   useEffect(() => {
     let cancelled = false;
@@ -46,7 +51,10 @@ export function useSupabaseAuth<Extras = null>(
         return;
       }
       try {
-        const profile = await fetchProfile(supabase, session.user.id);
+        let profile = await fetchProfile(supabase, session.user.id);
+        if (!profile && recoverProfileRef.current) {
+          profile = await recoverProfileRef.current(session);
+        }
         const extras = loadExtrasRef.current
           ? await loadExtrasRef.current(session.user.id, profile)
           : null;

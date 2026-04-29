@@ -3,6 +3,7 @@
 import { createContext, useContext } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import type { Profile } from "@del/shared";
+import { ProfileSchema } from "@del/shared";
 import { useSupabaseAuth } from "@del/data";
 import { supabase } from "./supabase";
 
@@ -40,8 +41,26 @@ async function resetPassword(email: string) {
   return { error: error?.message ?? null };
 }
 
+async function recoverMissingProfile(session: Session): Promise<Profile | null> {
+  const res = await fetch("/api/ensure-profile", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  return data.profile ? ProfileSchema.parse(data.profile) : null;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { user, profile, session, loading, signOut } = useSupabaseAuth(supabase);
+  const { user, profile, session, loading, signOut } = useSupabaseAuth(
+    supabase,
+    undefined,
+    recoverMissingProfile
+  );
 
   return (
     <AuthContext.Provider

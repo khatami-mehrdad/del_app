@@ -20,25 +20,70 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+const AUTH_TIMEOUT_MS = 15000;
+
+async function withAuthTimeout<T>(request: Promise<T>): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error("auth-timeout"));
+    }, AUTH_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([request, timeout]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
+function authRequestError(error: unknown): string {
+  if (error instanceof Error && error.message === "auth-timeout") {
+    return "Sign-in is taking longer than expected. Please check your connection and try again.";
+  }
+
+  return "Authentication failed. Please check your connection and try again.";
+}
+
 async function signIn(email: string, password: string) {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  return { error: error?.message ?? null };
+  try {
+    const { error } = await withAuthTimeout(
+      supabase.auth.signInWithPassword({ email, password })
+    );
+    return { error: error?.message ?? null };
+  } catch (error) {
+    return { error: authRequestError(error) };
+  }
 }
 
 async function signUp(email: string, password: string, fullName: string) {
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { role: "coach", full_name: fullName } },
-  });
-  return { error: error?.message ?? null };
+  try {
+    const { error } = await withAuthTimeout(
+      supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { role: "coach", full_name: fullName } },
+      })
+    );
+    return { error: error?.message ?? null };
+  } catch (error) {
+    return { error: authRequestError(error) };
+  }
 }
 
 async function resetPassword(email: string) {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth/callback#type=recovery`,
-  });
-  return { error: error?.message ?? null };
+  try {
+    const { error } = await withAuthTimeout(
+      supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback#type=recovery`,
+      })
+    );
+    return { error: error?.message ?? null };
+  } catch (error) {
+    return { error: authRequestError(error) };
+  }
 }
 
 async function recoverMissingProfile(session: Session): Promise<Profile | null> {

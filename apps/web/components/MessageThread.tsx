@@ -4,6 +4,83 @@ import { useState, useEffect, useRef } from "react";
 import type { Message } from "@del/shared";
 import { useVoiceNote } from "@/lib/use-voice-note";
 
+function formatSeconds(s: number) {
+  const safe = Number.isFinite(s) && s > 0 ? s : 0;
+  return `${Math.floor(safe / 60)}:${String(Math.floor(safe % 60)).padStart(2, "0")}`;
+}
+
+function VoiceNotePlayer({
+  url,
+  duration,
+  isMe,
+}: {
+  url: string;
+  duration: number;
+  isMe: boolean;
+}) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onTime = () => setCurrentTime(audio.currentTime);
+    const onEnd = () => {
+      setPlaying(false);
+      setCurrentTime(0);
+    };
+    audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("ended", onEnd);
+    audio.addEventListener("pause", onEnd);
+    return () => {
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("ended", onEnd);
+      audio.removeEventListener("pause", onEnd);
+    };
+  }, []);
+
+  async function toggle() {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) {
+      audio.pause();
+      return;
+    }
+    try {
+      await audio.play();
+      setPlaying(true);
+    } catch {
+      setPlaying(false);
+    }
+  }
+
+  const remaining = Math.max(0, duration - currentTime);
+
+  return (
+    <div className="flex items-center gap-3 min-w-[180px]">
+      <audio ref={audioRef} src={url} preload="metadata" />
+      <button
+        type="button"
+        onClick={toggle}
+        className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs ${
+          isMe ? "bg-white/15 text-white" : "bg-brown text-white"
+        }`}
+        aria-label={playing ? "Pause voice note" : "Play voice note"}
+      >
+        {playing ? "❚❚" : "▶"}
+      </button>
+      <span
+        className={`font-sans font-extralight text-[11px] tabular-nums ${
+          isMe ? "text-white/70" : "text-brown-light"
+        }`}
+      >
+        {formatSeconds(playing ? currentTime : remaining)}
+      </span>
+    </div>
+  );
+}
+
 interface Props {
   programId: string;
   userId: string;
@@ -137,18 +214,11 @@ export function MessageThread({
                   }`}
                 >
                   {msg.voice_note_url ? (
-                    <div>
-                      <audio
-                        src={msg.voice_note_url}
-                        controls
-                        preload="metadata"
-                        className="h-8 max-w-[240px]"
-                      />
-                      <p className={`font-sans font-extralight text-[10px] mt-1 ${isMe ? "text-white/40" : "text-brown-light/60"}`}>
-                        Voice note · {Math.floor((msg.voice_note_duration_sec ?? 0) / 60)}:
-                        {String((msg.voice_note_duration_sec ?? 0) % 60).padStart(2, "0")}
-                      </p>
-                    </div>
+                    <VoiceNotePlayer
+                      url={msg.voice_note_url}
+                      duration={msg.voice_note_duration_sec ?? 0}
+                      isMe={isMe}
+                    />
                   ) : (
                     <p
                       className={`font-sans font-light text-sm leading-relaxed ${

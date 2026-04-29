@@ -15,6 +15,7 @@ interface Props {
   onChangeText: (text: string) => void;
   sending: boolean;
   justSent: boolean;
+  coachName: string;
   voice: VoiceState;
   onSend: () => void;
 }
@@ -24,6 +25,7 @@ export function DailyCheckinCard({
   onChangeText,
   sending,
   justSent,
+  coachName,
   voice,
   onSend,
 }: Props) {
@@ -34,7 +36,7 @@ export function DailyCheckinCard({
 
       {justSent && (
         <View style={styles.sentBanner}>
-          <Text style={styles.sentBannerText}>Sent to Sahar</Text>
+          <Text style={styles.sentBannerText}>Sent to {coachName}</Text>
         </View>
       )}
 
@@ -76,7 +78,7 @@ export function DailyCheckinCard({
           disabled={sending}
         >
           <Text style={styles.sendBtnText}>
-            {sending ? '...' : 'Send to Sahar'}
+            {sending ? '...' : `Send to ${coachName}`}
           </Text>
         </TouchableOpacity>
       </View>

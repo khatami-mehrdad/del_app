@@ -35,7 +35,11 @@ export function subscribeToMessages(
         filter: `program_id=eq.${programId}`,
       },
       (payload) => {
-        onInsert(payload.new as Message);
+        try {
+          onInsert(MessageSchema.parse(payload.new));
+        } catch {
+          // Ignore malformed realtime payloads; the next fetch will re-validate rows.
+        }
       }
     )
     .subscribe();

@@ -18,10 +18,23 @@ export function PracticeModal({ programId, weekNumber, onClose, onSuccess }: Pro
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const trimmedTitle = title.trim();
+    const trimmedDescription = description.trim();
+
+    if (!trimmedTitle || !trimmedDescription) {
+      setError("Title and description are required.");
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
-    const result = await postPractice(programId, weekNumber, title, description);
+    const result = await postPractice(
+      programId,
+      weekNumber,
+      trimmedTitle,
+      trimmedDescription
+    );
     setSubmitting(false);
 
     if (result.error) {

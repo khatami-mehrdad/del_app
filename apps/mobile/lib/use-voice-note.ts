@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Alert } from 'react-native';
 import { Audio } from 'expo-av';
 import type { VoiceNoteHook } from '@del/data';
@@ -9,6 +9,20 @@ export function useVoiceNote(): VoiceNoteHook & { uri: string | null } {
   const [uri, setUri] = useState<string | null>(null);
   const recordingRef = useRef<Audio.Recording | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      if (recordingRef.current) {
+        void recordingRef.current.stopAndUnloadAsync().catch(() => undefined);
+        recordingRef.current = null;
+      }
+    };
+  }, []);
 
   async function startRecording() {
     try {
@@ -35,6 +49,9 @@ export function useVoiceNote(): VoiceNoteHook & { uri: string | null } {
       setDuration(0);
       setUri(null);
 
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
       timerRef.current = setInterval(() => {
         setDuration((d) => d + 1);
       }, 1000);

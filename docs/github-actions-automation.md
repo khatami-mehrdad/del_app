@@ -113,8 +113,11 @@ This is intentionally environment-scoped so preview and production can diverge l
 - Runs on PRs and pushes to `main`
 - Detects whether web or mobile areas changed
 - Runs:
-  - web lint + build
-  - mobile typecheck
+  - web lint + build + Playwright smoke tests for the public login flow
+  - mobile typecheck + Expo dependency compatibility check + Android JS export
+  - mobile route guard that fails if helper components appear under `apps/mobile/app/(tabs)`
+- Captures command output with `tee` and uploads `web-ci-logs` / `mobile-ci-logs`
+  artifacts on failed CI jobs, so lint/build/export failures have downloadable logs.
 
 ### `deploy-web.yml`
 

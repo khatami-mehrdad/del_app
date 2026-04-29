@@ -5,8 +5,8 @@ import type { SupabaseClient } from '../types';
 /** Returns the Monday of the current week as YYYY-MM-DD. */
 export function weekStartDate(): string {
   const now = new Date();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  monday.setUTCDate(now.getUTCDate() - ((now.getUTCDay() + 6) % 7));
   return monday.toISOString().split('T')[0];
 }
 

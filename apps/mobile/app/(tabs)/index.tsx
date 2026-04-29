@@ -27,6 +27,7 @@ export default function HomeScreen() {
 
   const { practice, loading: practiceLoading } = usePractice(program?.id, currentWeek);
   const { checkins, refetch: refetchCheckins } = useWeekCheckins(program?.id);
+  const coachName = program?.coach.full_name ?? 'your coach';
 
   const todayIndex = getTodayIndex();
   const streakDone = buildStreakDone(checkins, todayIndex);
@@ -109,6 +110,7 @@ export default function HomeScreen() {
           onChangeText={setCheckinText}
           sending={sending}
           justSent={justSent}
+          coachName={coachName}
           voice={voice}
           onSend={handleSendCheckin}
         />

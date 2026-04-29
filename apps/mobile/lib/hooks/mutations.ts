@@ -15,7 +15,7 @@ async function uploadVoiceNote(
 ): Promise<string | null> {
   const fileName = `${folder}/${programId}/${Date.now()}.m4a`;
   const formData = new FormData();
-  formData.append('', {
+  formData.append('file', {
     uri: voiceUri,
     type: 'audio/mp4',
     name: `${Date.now()}.m4a`,

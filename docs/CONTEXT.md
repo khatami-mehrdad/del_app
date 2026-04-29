@@ -34,17 +34,18 @@ There is no public landing page yet.
 ## Auth and data flow
 
 - Client auth state is managed in `apps/web/lib/auth-context.tsx`
-- Browser Supabase client is created in `apps/web/lib/supabase.ts`
+- Browser Supabase client is created in `apps/web/lib/supabase.ts` with Supabase SSR
+  cookie storage so Next proxy can read authenticated sessions
+- `apps/web/proxy.ts` redirects unauthenticated `/` and `/clients/*` requests to `/login`
 - Dashboard pages are wrapped by `apps/web/app/(dashboard)/layout.tsx`
 - The dashboard guard redirects unauthenticated users to `/login`
 
 Important behavior:
 
-- The redirect from `/` to `/login` is client-side, not server-side
-- In `DashboardGuard`, once auth loading finishes and there is no user, the component keeps rendering a loading/redirect state and triggers `router.replace("/login")`
-- Result: the current repo no longer renders a blank `null` state for logged-out dashboard visits, but it still relies on a client-side redirect rather than a server-side one
+- The redirect from `/` or `/clients/*` to `/login` now happens in middleware before dashboard HTML is served
+- `DashboardGuard` remains as a client-side role/profile guard after the middleware session check
 
-This likely explains the blank Vercel preview/screenshot at the site root.
+This supersedes the older blank-root behavior described below.
 
 ## Vercel finding on 2026-04-07
 
@@ -56,11 +57,11 @@ Observed behavior on `https://del-app-web.vercel.app`:
 - `/login` rendered normally
 - No browser console errors were observed during that redirect
 
-Conclusion:
+Historical conclusion:
 
 - The deployment is up
-- The blank screen at the root is currently expected behavior for logged-out users because the redirect happens on the client
-- This is a UX/routing issue, not a failed deploy
+- The blank screen at the root was caused by client-side redirect timing, not a failed deploy
+- Current code now redirects logged-out dashboard requests in middleware
 
 ## Environment dependencies
 
@@ -78,6 +79,7 @@ The web app depends on these environment variables:
 Where they are used:
 
 - `apps/web/lib/supabase.ts`: browser client
+- `apps/web/proxy.ts`: dashboard route auth check
 - `apps/web/lib/supabase-server.ts`: server-side client helper
 - `apps/web/app/api/add-client/route.ts`: admin client for creating users/programs, uses `NEXT_PUBLIC_SITE_URL` for invite redirects
 - `apps/web/app/.well-known/apple-app-site-association/route.ts` and `assetlinks.json/route.ts`: read the universal/app link env vars
@@ -111,6 +113,9 @@ Defined across these migrations:
 - `supabase/migrations/001_initial_schema.sql`: core tables + RLS + auth trigger
 - `supabase/migrations/002_push_notification_triggers.sql`: push notification triggers
 - `supabase/migrations/003_checkin_coach_read.sql`: coach-read marker on check-ins
+- `supabase/migrations/004_issue_report_fixes.sql`: issue-audit fixes for check-in RLS,
+  voice-note storage visibility, read/query indexes, push trigger settings, and
+  voice-note field pairing constraints
 
 Core tables:
 
@@ -133,7 +138,6 @@ Email templates for Supabase Auth live in `supabase/templates/` (invite, confirm
 ## Known product/code mismatches
 
 - `docs/SPEC.md` mentions `del.saharshams.com/dashboard`, but the current web app uses `/` as the dashboard root
-- There is no explicit server-side redirect from `/` to `/login`; auth is still guarded client-side in `apps/web/app/(dashboard)/layout.tsx`
 
 ## Android release note on 2026-04-07
 
@@ -164,13 +168,6 @@ Next rebuild checklist:
 2. Rebuild the Android app; previously downloaded APKs will still contain the old startup behavior
 3. If it still closes on launch, collect Android device logs from `adb logcat` or Play Console crash reporting for the new build
 
-## Suggested next debugging/fix steps
-
-If the brief pre-redirect flash at `/` should be removed, the next thing to implement is:
-
-1. Redirect unauthenticated requests at the route level or via `apps/web/middleware.ts` instead of waiting for client auth state
-2. Optionally add a small deployment note for Vercel project settings
-
 ## Rules alignment note on 2026-04-07
 
 The repo was partially brought into alignment with `.cursor/rules`:
@@ -180,7 +177,3 @@ The repo was partially brought into alignment with `.cursor/rules`:
 - The mobile `Colors` constant now uses a named export
 - `apps/web/app/(auth)/layout.tsx` no longer uses `"use client"`
 - The web dashboard no longer renders a blank `null` state for logged-out users
-
-Remaining known gap:
-
-- The web dashboard auth redirect still happens on the client rather than the server

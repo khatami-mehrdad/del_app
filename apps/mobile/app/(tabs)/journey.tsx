@@ -7,6 +7,7 @@ import { useJourneyEntries } from '@/lib/hooks';
 export default function JourneyScreen() {
   const { program } = useAuth();
   const { entries, loading } = useJourneyEntries(program?.id);
+  const coachName = program?.coach.full_name ?? 'your coach';
 
   const weeksSinceStart = program
     ? Math.max(1, Math.ceil((Date.now() - new Date(program.start_date).getTime()) / (7 * 24 * 60 * 60 * 1000)))
@@ -23,7 +24,7 @@ export default function JourneyScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <Text style={styles.title}>Your journey</Text>
-          <Text style={styles.subtitle}>Written by Sahar after each session</Text>
+          <Text style={styles.subtitle}>Written by {coachName} after each session</Text>
         </View>
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>
@@ -40,7 +41,7 @@ export default function JourneyScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <Text style={styles.title}>Your journey</Text>
-          <Text style={styles.subtitle}>Written by Sahar after each session</Text>
+          <Text style={styles.subtitle}>Written by {coachName} after each session</Text>
         </View>
         <View style={styles.loadingWrap}>
           <ActivityIndicator color={colors.gold} />
@@ -53,7 +54,7 @@ export default function JourneyScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Your journey</Text>
-        <Text style={styles.subtitle}>Written by Sahar after each session</Text>
+        <Text style={styles.subtitle}>Written by {coachName} after each session</Text>
       </View>
 
       <View style={styles.progressSection}>
@@ -72,7 +73,7 @@ export default function JourneyScreen() {
         {entries.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>
-              Your journey entries will appear here after each session with Sahar.
+              Your journey entries will appear here after each session with {coachName}.
             </Text>
           </View>
         ) : (

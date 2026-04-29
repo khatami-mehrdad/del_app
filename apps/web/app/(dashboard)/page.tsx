@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useClients } from "@/lib/hooks";
 import { AddClientModal } from "@/components/AddClientModal";
 
@@ -9,9 +9,11 @@ export default function DashboardHome() {
   const router = useRouter();
   const { clients, loading, refetch } = useClients();
   const [showAdd, setShowAdd] = useState(false);
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    if (!loading && clients.length > 0) {
+    if (!loading && clients.length > 0 && !hasRedirected.current) {
+      hasRedirected.current = true;
       router.replace(`/clients/${clients[0].program.id}`);
     }
   }, [clients, loading, router]);

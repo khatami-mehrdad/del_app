@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { deleteClient } from "./client-actions";
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function DeleteClientDialog({ clientName, clientId, onClose }: Props) {
+  const router = useRouter();
   const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {
@@ -17,7 +19,7 @@ export function DeleteClientDialog({ clientName, clientId, onClose }: Props) {
     try {
       const result = await deleteClient(clientId);
       if (result.ok) {
-        window.location.href = "/";
+        router.replace("/");
         return;
       }
       alert(result.message);

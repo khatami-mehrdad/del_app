@@ -51,42 +51,46 @@ export function Sidebar() {
             No clients yet
           </p>
         ) : (
-          clients.map((item, i) => (
-            <Link
-              key={item.program.id}
-              href={`/clients/${item.program.id}`}
-              className={`flex items-center gap-3 px-7 py-3.5 transition-colors ${
-                activeId === item.program.id
-                  ? "bg-gold/10"
-                  : "hover:bg-white/[0.03]"
-              }`}
-            >
-              <div
-                className={`w-10 h-10 rounded-full bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]} flex items-center justify-center shrink-0`}
+          clients.map((item, i) => {
+            const gradient = GRADIENTS[i % GRADIENTS.length] ?? GRADIENTS[0];
+
+            return (
+              <Link
+                key={item.program.id}
+                href={`/clients/${item.program.id}`}
+                className={`flex items-center gap-3 px-7 py-3.5 transition-colors ${
+                  activeId === item.program.id
+                    ? "bg-gold/10"
+                    : "hover:bg-white/[0.03]"
+                }`}
               >
-                <span className="font-serif text-base text-white">
-                  {item.client.full_name.charAt(0)}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-sans font-light text-base text-white/70">
-                  {item.client.full_name}
-                </p>
-                <p className="font-sans font-light text-xs text-white/30 tracking-wide">
-                  {item.pending ? (
-                    <span className="text-amber-400/70">Invite pending</span>
-                  ) : (
-                    <>Week {item.currentWeek} · Month {item.currentMonth}</>
-                  )}
-                </p>
-              </div>
-              {item.unread > 0 && (
-                <span className="w-6 h-6 rounded-full bg-gold flex items-center justify-center font-sans text-[10px] font-light text-white">
-                  {item.unread}
-                </span>
-              )}
-            </Link>
-          ))
+                <div
+                  className={`w-10 h-10 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center shrink-0`}
+                >
+                  <span className="font-serif text-base text-white">
+                    {item.client.full_name.charAt(0)}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-sans font-light text-base text-white/70">
+                    {item.client.full_name}
+                  </p>
+                  <p className="font-sans font-light text-xs text-white/30 tracking-wide">
+                    {item.pending ? (
+                      <span className="text-amber-400/70">Invite pending</span>
+                    ) : (
+                      <>Week {item.currentWeek} · Month {item.currentMonth}</>
+                    )}
+                  </p>
+                </div>
+                {item.unread > 0 && (
+                  <span className="w-6 h-6 rounded-full bg-gold flex items-center justify-center font-sans text-[10px] font-light text-white">
+                    {item.unread}
+                  </span>
+                )}
+              </Link>
+            );
+          })
         )}
       </div>
 

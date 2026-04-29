@@ -32,10 +32,24 @@ export function JourneyEditor({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const trimmedTitle = title.trim();
+    const trimmedBody = body.trim();
+
+    if (!trimmedTitle || !trimmedBody) {
+      setError("Title and session narrative are required.");
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
-    const result = await saveJourneyEntry(programId, weekNumber, date, title, body);
+    const result = await saveJourneyEntry(
+      programId,
+      weekNumber,
+      date,
+      trimmedTitle,
+      trimmedBody
+    );
     setSubmitting(false);
 
     if (result.error) {

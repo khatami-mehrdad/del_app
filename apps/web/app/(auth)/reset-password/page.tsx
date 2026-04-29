@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -11,6 +11,23 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      if (!data.session) {
+        setError("This reset link is invalid or has expired. Request a new link to continue.");
+      }
+      setSessionReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,6 +44,16 @@ export default function ResetPasswordPage() {
     }
 
     setSubmitting(true);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      setSubmitting(false);
+      setError("This reset link is invalid or has expired. Request a new link to continue.");
+      return;
+    }
+
     const { error: updateError } = await supabase.auth.updateUser({ password });
     setSubmitting(false);
 
@@ -105,10 +132,10 @@ export default function ResetPasswordPage() {
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !sessionReady}
             className="w-full bg-gold text-white py-3 rounded-full font-sans font-light text-xs tracking-[0.2em] uppercase hover:bg-gold-light transition-colors disabled:opacity-50"
           >
-            {submitting ? "..." : "Save new password"}
+            {submitting ? "..." : sessionReady ? "Save new password" : "Checking link..."}
           </button>
         </form>
       </div>

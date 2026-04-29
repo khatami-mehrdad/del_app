@@ -133,6 +133,7 @@ export function LoginScreen() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
             className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 font-sans font-light text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-gold/50 transition-colors"
           />
 

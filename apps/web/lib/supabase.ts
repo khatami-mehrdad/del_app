@@ -1,7 +1,12 @@
-import { createSupabaseClient } from '@del/supabase';
+import { createBrowserClient } from '@supabase/ssr';
+import type { Database } from '@del/supabase';
 
-export const supabase = createSupabaseClient(
+export const supabase = createBrowserClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  { detectSessionInUrl: true }
+  {
+    auth: {
+      detectSessionInUrl: true,
+    },
+  }
 );

@@ -74,16 +74,44 @@ jobs:
       - name: Install monorepo dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Prepare CI log directory
+        run: mkdir -p ci-logs
+
       - name: Lint web app
-        run: pnpm --dir apps/web lint
+        run: |
+          set -o pipefail
+          pnpm --dir apps/web lint 2>&1 | tee ci-logs/web-lint.log
 
       - name: Build web app
-        run: pnpm --dir apps/web build
+        run: |
+          set -o pipefail
+          pnpm --dir apps/web build 2>&1 | tee ci-logs/web-build.log
+
+      - name: Install Playwright browser
+        run: |
+          set -o pipefail
+          pnpm --dir apps/web exec playwright install --with-deps chromium 2>&1 | tee ci-logs/web-playwright-install.log
+
+      - name: Run web smoke tests
+        run: |
+          set -o pipefail
+          pnpm --dir apps/web test:e2e 2>&1 | tee ci-logs/web-e2e.log
+
+      - name: Upload web CI logs
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: web-ci-logs
+          path: ci-logs/
 
   mobile:
     needs: changes
     if: needs.changes.outputs.mobile == 'true'
     runs-on: ubuntu-latest
+    env:
+      EXPO_PUBLIC_WEB_APP_HOST: del.saharshams.com
+      EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: example-anon-key
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -103,5 +131,32 @@ jobs:
       - name: Install monorepo dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Prepare CI log directory
+        run: mkdir -p ci-logs
+
       - name: Typecheck mobile app
-        run: pnpm --dir apps/mobile lint
+        run: |
+          set -o pipefail
+          pnpm --dir apps/mobile lint 2>&1 | tee ci-logs/mobile-typecheck.log
+
+      - name: Check mobile tab routes
+        run: |
+          set -o pipefail
+          pnpm --dir apps/mobile check:routes 2>&1 | tee ci-logs/mobile-routes.log
+
+      - name: Check Expo dependency compatibility
+        run: |
+          set -o pipefail
+          pnpm --dir apps/mobile check:expo 2>&1 | tee ci-logs/mobile-expo.log
+
+      - name: Export Android JS bundle
+        run: |
+          set -o pipefail
+          pnpm --dir apps/mobile export:android 2>&1 | tee ci-logs/mobile-export-android.log
+
+      - name: Upload mobile CI logs
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: mobile-ci-logs
+          path: ci-logs/

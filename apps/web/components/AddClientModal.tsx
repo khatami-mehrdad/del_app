@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getAccessToken } from "@del/data";
@@ -21,40 +21,50 @@ export function AddClientModal({ onClose, onSuccess }: Props) {
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submittedRef = useRef(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return;
+    if (!user || submittedRef.current) return;
+    submittedRef.current = true;
     setSubmitting(true);
     setError(null);
 
-    const token = await getAccessToken(supabase);
-    if (!token) {
-      setError("Session expired. Please refresh and try again.");
+    try {
+      const token = await getAccessToken(supabase);
+      if (!token) {
+        setError("Session expired. Please refresh and try again.");
+        submittedRef.current = false;
+        setSubmitting(false);
+        return;
+      }
+
+      const res = await fetch("/api/add-client", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, email, startDate }),
+      });
+
+      const data = await res.json();
       setSubmitting(false);
-      return;
+
+      if (!res.ok) {
+        setError(data.error || "Something went wrong");
+        submittedRef.current = false;
+        return;
+      }
+
+      onClose();
+      onSuccess?.();
+      router.push(`/clients/${data.program.id}`);
+    } catch {
+      setError("Could not add client. Please check your connection and try again.");
+      submittedRef.current = false;
+      setSubmitting(false);
     }
-
-    const res = await fetch("/api/add-client", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ name, email, startDate }),
-    });
-
-    const data = await res.json();
-    setSubmitting(false);
-
-    if (!res.ok) {
-      setError(data.error || "Something went wrong");
-      return;
-    }
-
-    onClose();
-    onSuccess?.();
-    router.push(`/clients/${data.program.id}`);
   }
 
   return (

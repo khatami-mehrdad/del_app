@@ -43,7 +43,9 @@ export default function AuthCallbackPage() {
     });
 
     void (async () => {
-      for (let i = 0; i < 12; i++) {
+      const retryDelaysMs = [150, 250, 400, 650, 1000, 1500, 2000, 2500, 3000];
+
+      for (const delayMs of retryDelaysMs) {
         if (cancelled || routed.current) return;
         const {
           data: { session },
@@ -52,7 +54,7 @@ export default function AuthCallbackPage() {
           applySession(session);
           return;
         }
-        await new Promise((r) => setTimeout(r, 150));
+        await new Promise((r) => setTimeout(r, delayMs));
       }
 
       if (!cancelled && !routed.current) {

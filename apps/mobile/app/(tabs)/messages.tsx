@@ -92,6 +92,8 @@ export default function MessagesScreen() {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const voice = useVoiceNote();
+  const coachName = program?.coach.full_name ?? 'your coach';
+  const coachInitial = coachName.charAt(0).toUpperCase();
 
   useEffect(() => {
     if (program && user) {
@@ -108,10 +110,10 @@ export default function MessagesScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>S</Text>
+            <Text style={styles.avatarText}>{coachInitial}</Text>
           </View>
           <View>
-            <Text style={styles.headerName}>Sahar</Text>
+            <Text style={styles.headerName}>{coachName}</Text>
             <Text style={styles.headerStatus}>Responds within 24 hours</Text>
           </View>
         </View>
@@ -154,10 +156,10 @@ export default function MessagesScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>S</Text>
+            <Text style={styles.avatarText}>{coachInitial}</Text>
           </View>
           <View>
-            <Text style={styles.headerName}>Sahar</Text>
+            <Text style={styles.headerName}>{coachName}</Text>
             <Text style={styles.headerStatus}>Responds within 24 hours</Text>
           </View>
         </View>
@@ -179,10 +181,10 @@ export default function MessagesScreen() {
       >
         <View style={styles.header}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>S</Text>
+            <Text style={styles.avatarText}>{coachInitial}</Text>
           </View>
           <View>
-            <Text style={styles.headerName}>Sahar</Text>
+            <Text style={styles.headerName}>{coachName}</Text>
             <Text style={styles.headerStatus}>Responds within 24 hours</Text>
           </View>
         </View>
@@ -226,7 +228,7 @@ export default function MessagesScreen() {
                       isMe ? styles.msgTimeClient : styles.msgTimeCoach,
                     ]}
                   >
-                    {!isMe ? `From Sahar · ${formatTime(msg.created_at)}` : formatTime(msg.created_at)}
+                    {!isMe ? `From ${coachName} · ${formatTime(msg.created_at)}` : formatTime(msg.created_at)}
                   </Text>
                 </View>
               </View>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import type { JourneyEntry } from "@del/shared";
 import {
@@ -45,11 +45,29 @@ export default function ClientDetailPage() {
 
   useEffect(() => {
     if (programId) {
-      void markCheckinsRead(programId).then(() => refetch());
+      void markCheckinsRead(programId).then((result) => {
+        if (!result.error) {
+          void refetch();
+        }
+      });
     }
   }, [programId, checkins.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const { entries, refetch: refetchJourney } = useJourneyEntries(programId);
   const { messages } = useMessages(programId);
+
+  const handleSendMessage = useCallback(
+    (text: string, voiceBlob?: Blob, voiceDuration?: number) => {
+      return sendMessage(programId, user!.id, text, voiceBlob, voiceDuration);
+    },
+    [programId, user]
+  );
+
+  const handleMarkMessagesRead = useCallback(async () => {
+    const result = await markMessagesRead(programId, user!.id);
+    if (!result.error) {
+      await refetch();
+    }
+  }, [programId, refetch, user]);
 
   if (!clientItem) {
     return (
@@ -69,13 +87,8 @@ export default function ClientDetailPage() {
         clientName={clientItem.client.full_name}
         messages={messages}
         onBack={() => setShowMessages(false)}
-        onSend={async (text, voiceBlob, voiceDuration) => {
-          await sendMessage(programId, user!.id, text, voiceBlob, voiceDuration);
-        }}
-        onMarkRead={async () => {
-          await markMessagesRead(programId, user!.id);
-          await refetch();
-        }}
+        onSend={handleSendMessage}
+        onMarkRead={handleMarkMessagesRead}
       />
     );
   }

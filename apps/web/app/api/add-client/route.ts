@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (progError) {
+    await supabaseAdmin.auth.admin.deleteUser(invited.user.id);
     return NextResponse.json({ error: progError.message }, { status: 500 });
   }
 

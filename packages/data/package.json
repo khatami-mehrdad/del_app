@@ -10,7 +10,7 @@
   "dependencies": {
     "@del/shared": "workspace:*",
     "@del/supabase": "workspace:*",
-    "@supabase/supabase-js": "^2"
+    "@supabase/supabase-js": "^2.105.1"
   },
   "peerDependencies": {
     "react": ">=18"

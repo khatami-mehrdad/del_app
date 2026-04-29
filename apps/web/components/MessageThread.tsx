@@ -10,7 +10,11 @@ interface Props {
   clientName: string;
   messages: Message[];
   onBack: () => void;
-  onSend: (text: string, voiceBlob?: Blob, voiceDuration?: number) => Promise<void>;
+  onSend: (
+    text: string,
+    voiceBlob?: Blob,
+    voiceDuration?: number
+  ) => Promise<{ error: string | null }>;
   onMarkRead: () => Promise<void>;
 }
 
@@ -43,6 +47,7 @@ export function MessageThread({
 }: Props) {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const voice = useVoiceNote();
 
@@ -58,10 +63,25 @@ export function MessageThread({
     e.preventDefault();
     if (!input.trim() && !voice.blob) return;
     setSending(true);
-    await onSend(input.trim(), voice.blob ?? undefined, voice.blob ? voice.duration : undefined);
-    setInput("");
-    voice.reset();
-    setSending(false);
+    setSendError(null);
+
+    try {
+      const result = await onSend(
+        input.trim(),
+        voice.blob ?? undefined,
+        voice.blob ? voice.duration : undefined
+      );
+      if (result.error) {
+        setSendError(result.error);
+        return;
+      }
+      setInput("");
+      voice.reset();
+    } catch {
+      setSendError("Message failed to send. Please check your connection and try again.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -203,6 +223,11 @@ export function MessageThread({
             Send
           </button>
         </form>
+        {sendError && (
+          <p className="px-6 pb-3 font-sans text-xs font-light text-red-500">
+            {sendError}
+          </p>
+        )}
       </div>
     </div>
   );

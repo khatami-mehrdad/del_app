@@ -6,30 +6,20 @@ import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ClientsProvider } from "@/lib/hooks";
 import { Sidebar } from "@/components/Sidebar";
 import { ClientUsingCoachDashboardScreen } from "@/components/ClientUsingCoachDashboardScreen";
+import { LoginScreen } from "@/components/LoginScreen";
 
 function DashboardGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading, signOut } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/login");
+    if (!loading && !user && window.location.pathname !== "/") {
+      router.replace("/login");
+    }
   }, [user, loading, router]);
 
-  if (loading || !user) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-cream">
-        <div className="text-center px-6">
-          <p className="font-serif italic text-xl text-gold-light animate-pulse">
-            Del
-          </p>
-          {!loading && (
-            <p className="mt-3 font-sans font-extralight text-[10px] tracking-[0.2em] uppercase text-brown-light">
-              Redirecting to sign in
-            </p>
-          )}
-        </div>
-      </div>
-    );
+  if (!user) {
+    return <LoginScreen />;
   }
 
   if (profile?.role === "client") {

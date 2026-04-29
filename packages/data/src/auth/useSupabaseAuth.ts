@@ -87,7 +87,9 @@ export function useSupabaseAuth<Extras = null>(
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => hydrate(session));
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void hydrate(session);
+    });
 
     return () => {
       cancelled = true;

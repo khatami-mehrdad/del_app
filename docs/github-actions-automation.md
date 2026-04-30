@@ -92,6 +92,12 @@ Add these as **Environment variables** on both `preview` and `production`.
 
 If preview and production share the same backend right now, you can set the same values in both environments and split them later.
 
+Android push registration also needs `GOOGLE_SERVICES_JSON` configured as an
+EAS file environment variable containing Firebase's public Android
+`google-services.json`. This is not one of the GitHub-synced `EXPO_PUBLIC_*`
+values; configure it in EAS for the build environment before creating the Play
+internal AAB.
+
 ---
 
 ## Environment secrets (preview + production)

@@ -17,4 +17,5 @@ apps/mobile/.secrets/
 .env*.local
 del-companion-play-*.json
 *-firebase-adminsdk-*.json
+google-services.json
 *.p8

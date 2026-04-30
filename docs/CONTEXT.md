@@ -100,16 +100,21 @@ The mobile app depends on these environment variables:
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 - `EXPO_PUBLIC_WEB_APP_HOST` (hostname only; drives iOS `associatedDomains` and Android intent filters in `app.config.ts`)
+- `GOOGLE_SERVICES_JSON` (EAS file env pointing to Android `google-services.json` for FCM registration)
 
 Notes:
 
 - These must be present both for local Expo runs and for EAS Android/iOS builds
+- `GOOGLE_SERVICES_JSON` is build-only and should be configured as an EAS file
+  variable; do not commit Firebase Admin SDK private keys or service account JSON
+  to the mobile app
 - Do not put `SUPABASE_SERVICE_ROLE_KEY` into the mobile app build environment
 - A checked-in template exists at `apps/mobile/.env.example`
 - `EXPO_PUBLIC_WEB_APP_HOST` must match the hostname in `NEXT_PUBLIC_SITE_URL`; changing it requires new store builds
 - Android notification delivery requires the native `POST_NOTIFICATIONS`
   permission declared in `apps/mobile/app.config.ts`; installed Android
-  binaries must be rebuilt after this permission changes
+  binaries must be rebuilt after this permission changes. Android push token
+  registration also requires `google-services.json` to be embedded at build time.
 
 ## Supabase model summary
 

@@ -8,6 +8,7 @@ import type { ExpoConfig } from "expo/config";
 const webAppHost =
   process.env.EXPO_PUBLIC_WEB_APP_HOST?.replace(/^https?:\/\//, "").split("/")[0] ||
   "del.saharshams.com";
+const googleServicesFile = process.env.GOOGLE_SERVICES_JSON;
 
 const config: ExpoConfig = {
   name: "Del",
@@ -33,6 +34,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: "com.saharshams.del",
+    ...(googleServicesFile ? { googleServicesFile } : {}),
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon.png",
       backgroundColor: "#1C1410",

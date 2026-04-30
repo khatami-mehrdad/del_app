@@ -40,11 +40,13 @@ if (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON) {
     ...(nextSubmit.preview.android ?? {}),
     serviceAccountKeyPath: googleServiceAccountPath,
     track: "internal",
+    changesNotSentForReview: true,
   };
   nextSubmit.internal.android = {
     ...(nextSubmit.internal.android ?? {}),
     serviceAccountKeyPath: googleServiceAccountPath,
     track: "internal",
+    changesNotSentForReview: true,
   };
   nextSubmit.production.android = {
     ...(nextSubmit.production.android ?? {}),

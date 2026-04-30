@@ -157,6 +157,7 @@ Notes:
 
 - `internal` and `preview` both use the `preview` GitHub Environment (same Supabase backend, same `EXPO_PUBLIC_*` values), so you do not need a third environment set.
 - `internal` and `production` profiles both `autoIncrement` the Android `versionCode`, otherwise Play rejects the upload as a duplicate.
+- Android internal submissions set `changesNotSentForReview: true` because Play can reject automatic review submission while still accepting the uploaded internal-track build.
 
 ---
 

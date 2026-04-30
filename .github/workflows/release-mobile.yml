@@ -159,6 +159,8 @@ jobs:
           --profile "${{ inputs.environment_name }}"
           --id "${{ needs.build.outputs.android_build_id }}"
           --non-interactive
+          --verbose
+          --verbose-fastlane
           --wait
 
       - name: Publish Android release summary

@@ -18,11 +18,17 @@ export async function fetchMessages(
 /**
  * Subscribe to new messages on a program's realtime channel.
  * Returns an unsubscribe function that removes the channel.
+ *
+ * `onStatus` fires for each subscription state transition (`SUBSCRIBED`,
+ * `CHANNEL_ERROR`, `TIMED_OUT`, `CLOSED`). Callers should use it to refetch
+ * after `SUBSCRIBED` so messages inserted during the subscribe handshake — or
+ * while a backgrounded socket was reconnecting — are not lost.
  */
 export function subscribeToMessages(
   supabase: SupabaseClient,
   programId: string,
-  onInsert: (message: Message) => void
+  onInsert: (message: Message) => void,
+  onStatus?: (status: string) => void
 ): () => void {
   const channel = supabase
     .channel(`messages:${programId}`)
@@ -56,7 +62,9 @@ export function subscribeToMessages(
         }
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      onStatus?.(status);
+    });
 
   return () => {
     supabase.removeChannel(channel);

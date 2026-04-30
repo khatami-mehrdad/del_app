@@ -16,4 +16,5 @@ apps/mobile/.secrets/
 .vercel
 .env*.local
 del-companion-play-*.json
+*-firebase-adminsdk-*.json
 *.p8

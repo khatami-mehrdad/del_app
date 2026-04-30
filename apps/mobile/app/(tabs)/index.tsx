@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { colors, fonts } from '@/lib/theme';
 import { useAuth } from '@/lib/auth-context';
 import { usePractice, useWeekCheckins, submitCheckin, markPracticeDone } from '@/lib/hooks';
@@ -25,8 +26,18 @@ export default function HomeScreen() {
     : 1;
   const currentWeek = Math.min(weeksSinceStart, program?.total_sessions ?? 12);
 
-  const { practice, loading: practiceLoading } = usePractice(program?.id, currentWeek);
+  const { practice, loading: practiceLoading, refetch: refetchPractice } = usePractice(
+    program?.id,
+    currentWeek
+  );
   const { checkins, refetch: refetchCheckins } = useWeekCheckins(program?.id);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refetchPractice();
+      void refetchCheckins();
+    }, [refetchPractice, refetchCheckins])
+  );
   const coachName = program?.coach.full_name ?? 'your coach';
 
   const todayIndex = getTodayIndex();

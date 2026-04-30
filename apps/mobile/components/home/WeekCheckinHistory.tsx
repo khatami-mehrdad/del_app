@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '@/lib/theme';
 import type { CheckIn } from '@del/shared';
+import { VoiceNotePlayer } from '@/components/VoiceNotePlayer';
 
 interface Props {
   checkins: CheckIn[];
@@ -20,11 +21,15 @@ export function WeekCheckinHistory({ checkins }: Props) {
         return (
           <View key={c.id} style={styles.historyItem}>
             <Text style={styles.historyDay}>{dayName} · {time}</Text>
-            <Text style={styles.historyText}>
-              {c.content_text
-                ? `"${c.content_text}"`
-                : `Voice note · ${Math.floor((c.voice_note_duration_sec ?? 0) / 60)}:${String((c.voice_note_duration_sec ?? 0) % 60).padStart(2, '0')}`}
-            </Text>
+            {c.voice_note_url ? (
+              <VoiceNotePlayer
+                url={c.voice_note_url}
+                duration={c.voice_note_duration_sec ?? 0}
+                variant="onLight"
+              />
+            ) : (
+              <Text style={styles.historyText}>"{c.content_text}"</Text>
+            )}
           </View>
         );
       })}

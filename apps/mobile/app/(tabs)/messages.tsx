@@ -13,11 +13,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
-import { Audio } from 'expo-av';
 import { colors, fonts } from '@/lib/theme';
 import { useAuth } from '@/lib/auth-context';
 import { useMessages, sendMessage, markMessagesRead } from '@/lib/hooks';
 import { useVoiceNote } from '@/lib/use-voice-note';
+import { VoiceNotePlayer } from '@/components/VoiceNotePlayer';
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -35,55 +35,6 @@ function formatDate(iso: string) {
   yesterday.setDate(today.getDate() - 1);
   if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
   return d.toLocaleDateString('en-US', { weekday: 'long' });
-}
-
-function VoiceNotePlayer({ url, duration }: { url: string; duration: number }) {
-  const [playing, setPlaying] = useState(false);
-  const soundRef = useRef<Audio.Sound | null>(null);
-  const mins = Math.floor(duration / 60);
-  const secs = duration % 60;
-
-  async function togglePlay() {
-    if (playing && soundRef.current) {
-      await soundRef.current.stopAsync();
-      await soundRef.current.unloadAsync();
-      soundRef.current = null;
-      setPlaying(false);
-      return;
-    }
-    try {
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false, playsInSilentModeIOS: true });
-      const { sound } = await Audio.Sound.createAsync({ uri: url });
-      soundRef.current = sound;
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          setPlaying(false);
-          sound.unloadAsync();
-          soundRef.current = null;
-        }
-      });
-      await sound.playAsync();
-      setPlaying(true);
-    } catch {
-      setPlaying(false);
-    }
-  }
-
-  return (
-    <TouchableOpacity style={styles.voiceNote} onPress={togglePlay}>
-      <View style={[styles.playBtn, playing && { backgroundColor: '#C0392B' }]}>
-        <Text style={styles.playIcon}>{playing ? '■' : '▶'}</Text>
-      </View>
-      <View style={styles.waveform}>
-        {[8, 14, 10, 16, 8, 12, 6, 14, 10, 8].map((h, i) => (
-          <View key={i} style={[styles.waveBar, { height: h }]} />
-        ))}
-      </View>
-      <Text style={styles.voiceDur}>
-        {mins}:{secs.toString().padStart(2, '0')}
-      </Text>
-    </TouchableOpacity>
-  );
 }
 
 export default function MessagesScreen() {
@@ -218,7 +169,11 @@ export default function MessagesScreen() {
                   ]}
                 >
                   {msg.voice_note_url ? (
-                    <VoiceNotePlayer url={msg.voice_note_url} duration={msg.voice_note_duration_sec ?? 0} />
+                    <VoiceNotePlayer
+                      url={msg.voice_note_url}
+                      duration={msg.voice_note_duration_sec ?? 0}
+                      variant={isMe ? 'onLight' : 'onDark'}
+                    />
                   ) : (
                     <Text
                       style={[
@@ -373,27 +328,6 @@ const styles = StyleSheet.create({
   },
   msgTimeCoach: { color: 'rgba(255,255,255,0.25)' },
   msgTimeClient: { color: colors.brownLight, opacity: 0.5, textAlign: 'right' },
-  voiceNote: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  playBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  playIcon: { color: colors.white, fontSize: 10 },
-  waveform: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 2 },
-  waveBar: {
-    width: 2.5,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 1,
-  },
-  voiceDur: {
-    fontFamily: fonts.sans.extraLight,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.4)',
-  },
   voicePreview: {
     flexDirection: 'row',
     alignItems: 'center',

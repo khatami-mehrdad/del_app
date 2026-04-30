@@ -1,6 +1,7 @@
 "use client";
 
 import type { CheckIn } from "@del/shared";
+import { VoiceNotePlayer } from "@/components/VoiceNotePlayer";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -29,13 +30,17 @@ export function ClientCheckinsPanel({ checkins }: Props) {
                 <p className="font-sans font-light text-xs tracking-[0.15em] uppercase text-brown-light mb-1">
                   {dayName} · {time}
                 </p>
-                <p className="font-sans font-light text-base text-brown-mid leading-relaxed">
-                  {ci.voice_note_url
-                    ? `Voice note · ${Math.floor((ci.voice_note_duration_sec ?? 0) / 60)}:${String((ci.voice_note_duration_sec ?? 0) % 60).padStart(2, "0")}`
-                    : ci.content_text
-                      ? `"${ci.content_text}"`
-                      : "Practice completed"}
-                </p>
+                {ci.voice_note_url ? (
+                  <VoiceNotePlayer
+                    url={ci.voice_note_url}
+                    duration={ci.voice_note_duration_sec ?? 0}
+                    variant="onLight"
+                  />
+                ) : (
+                  <p className="font-sans font-light text-base text-brown-mid leading-relaxed">
+                    {ci.content_text ? `"${ci.content_text}"` : "Practice completed"}
+                  </p>
+                )}
               </div>
             );
           })}

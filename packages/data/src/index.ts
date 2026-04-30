@@ -6,7 +6,11 @@ export { useSupabaseAuth } from './auth/useSupabaseAuth';
 export type { SupabaseAuthState, LoadExtras } from './auth/useSupabaseAuth';
 
 // Queries
-export { fetchMessages, subscribeToMessages } from './queries/messages';
+export {
+  fetchMessages,
+  fetchUnreadMessageCount,
+  subscribeToMessages,
+} from './queries/messages';
 export { fetchPractice } from './queries/practice';
 export { fetchWeekCheckins, weekStartDate } from './queries/checkins';
 export { fetchJourneyEntries } from './queries/journey';

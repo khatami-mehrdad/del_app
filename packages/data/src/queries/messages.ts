@@ -15,6 +15,21 @@ export async function fetchMessages(
   return (data ?? []).map((row) => MessageSchema.parse(row));
 }
 
+export async function fetchUnreadMessageCount(
+  supabase: SupabaseClient,
+  programId: string,
+  userId: string
+): Promise<number> {
+  const { count } = await supabase
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('program_id', programId)
+    .neq('sender_id', userId)
+    .is('read_at', null);
+
+  return count ?? 0;
+}
+
 /**
  * Subscribe to new messages on a program's realtime channel.
  * Returns an unsubscribe function that removes the channel.

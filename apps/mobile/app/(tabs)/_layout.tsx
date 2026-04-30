@@ -4,6 +4,7 @@ import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { colors, fonts } from '@/lib/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/lib/auth-context';
+import { useUnreadMessageCount } from '@/lib/hooks';
 import { CoachUsingClientAppScreen } from '@/components/CoachUsingClientAppScreen';
 
 function HomeIcon({ color }: { color: string }) {
@@ -43,9 +44,10 @@ function JourneyIcon({ color }: { color: string }) {
 }
 
 export default function TabLayout() {
-  const { profile, loading } = useAuth();
+  const { user, profile, program, loading } = useAuth();
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 16);
+  const unreadMessages = useUnreadMessageCount(program?.id, user?.id);
 
   if (loading) {
     return (
@@ -100,6 +102,13 @@ export default function TabLayout() {
         options={{
           title: 'Messages',
           tabBarIcon: ({ color }) => <MessagesIcon color={color} />,
+          tabBarBadge: unreadMessages > 0 ? unreadMessages : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: colors.gold,
+            color: colors.brown,
+            fontFamily: fonts.sans.regular,
+            fontSize: 10,
+          },
         }}
       />
       <Tabs.Screen

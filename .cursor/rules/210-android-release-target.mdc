@@ -1,0 +1,14 @@
+---
+description: Android release target during current testing stage
+alwaysApply: true
+---
+
+# Android Release Target
+
+- During the current testing stage, interpret "release Android", "Android release",
+  or "release to testing" as Google Play Console Internal testing.
+- Use the GitHub Actions `Release mobile` workflow with
+  `environment_name=internal` and `platform=android`.
+- Do not treat the preview APK / `preview-android-latest` GitHub prerelease as
+  the Android release target unless the user explicitly asks for a preview APK
+  or side-load build.

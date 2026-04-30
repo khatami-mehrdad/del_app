@@ -30,7 +30,11 @@ export function useMessages(programId: string | undefined) {
       });
 
     const unsubscribe = subscribeToMessages(supabase, programId, (msg) => {
-      if (!cancelled) setMessages((prev) => [...prev, msg]);
+      if (!cancelled) {
+        setMessages((prev) =>
+          prev.some((existing) => existing.id === msg.id) ? prev : [...prev, msg]
+        );
+      }
     });
 
     return () => {

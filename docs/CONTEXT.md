@@ -107,6 +107,9 @@ Notes:
 - Do not put `SUPABASE_SERVICE_ROLE_KEY` into the mobile app build environment
 - A checked-in template exists at `apps/mobile/.env.example`
 - `EXPO_PUBLIC_WEB_APP_HOST` must match the hostname in `NEXT_PUBLIC_SITE_URL`; changing it requires new store builds
+- Android notification delivery requires the native `POST_NOTIFICATIONS`
+  permission declared in `apps/mobile/app.config.ts`; installed Android
+  binaries must be rebuilt after this permission changes
 
 ## Supabase model summary
 
@@ -118,6 +121,11 @@ Defined across these migrations:
 - `supabase/migrations/004_issue_report_fixes.sql`: issue-audit fixes for check-in RLS,
   voice-note storage visibility, read/query indexes, push trigger settings, and
   voice-note field pairing constraints
+- `supabase/migrations/005_push_secret_api_key.sql`: switches push trigger
+  authentication to Supabase secret API keys via the `apikey` header
+- `supabase/migrations/006_push_settings_table.sql`: stores push runtime
+  settings in a locked `app_settings` table so API automation can update them
+  without `ALTER DATABASE` privileges
 
 Core tables:
 
@@ -134,6 +142,7 @@ The schema enables RLS and includes an auth trigger that creates a `profiles` ro
 Edge functions:
 
 - `supabase/functions/send-push`: sends push notifications via Expo push service
+  and validates database-triggered calls against Supabase secret API keys
 
 Email templates for Supabase Auth live in `supabase/templates/` (invite, confirm signup, reset password).
 

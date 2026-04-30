@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
@@ -17,7 +17,10 @@ Notifications.setNotificationHandler({
 });
 
 async function registerForPushNotifications(): Promise<string | null> {
-  if (!Device.isDevice) return null;
+  if (!Device.isDevice) {
+    console.warn("Push notification setup skipped: physical device required.");
+    return null;
+  }
 
   const { status: existing } = await Notifications.getPermissionsAsync();
   let finalStatus = existing;
@@ -27,7 +30,10 @@ async function registerForPushNotifications(): Promise<string | null> {
     finalStatus = status;
   }
 
-  if (finalStatus !== "granted") return null;
+  if (finalStatus !== "granted") {
+    console.warn(`Push notification setup skipped: permission is ${finalStatus}.`);
+    return null;
+  }
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
@@ -37,7 +43,10 @@ async function registerForPushNotifications(): Promise<string | null> {
   }
 
   const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-  if (!projectId) return null;
+  if (!projectId) {
+    console.warn("Push notification setup skipped: missing EAS project ID.");
+    return null;
+  }
 
   const { data } = await Notifications.getExpoPushTokenAsync({ projectId });
   return data;
@@ -71,5 +80,15 @@ export function usePushRegistration() {
     }
 
     void register();
+
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active" && !registered.current) {
+        void register();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, [user]);
 }

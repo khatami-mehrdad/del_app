@@ -2,6 +2,42 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
+function getSecretApiKeys(): string[] {
+  const keys = new Set<string>();
+  const namedKeys = Deno.env.get("SUPABASE_SECRET_KEYS");
+
+  if (namedKeys) {
+    const parsed = JSON.parse(namedKeys) as Record<string, unknown>;
+    for (const key of Object.values(parsed)) {
+      if (typeof key === "string" && key.length > 0) {
+        keys.add(key);
+      }
+    }
+  }
+
+  const singleKey = Deno.env.get("SUPABASE_SECRET_KEY");
+  if (singleKey) keys.add(singleKey);
+
+  const legacyKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (legacyKey) keys.add(legacyKey);
+
+  return Array.from(keys);
+}
+
+function getAdminApiKey(): string {
+  const [adminApiKey] = getSecretApiKeys();
+  if (!adminApiKey) {
+    throw new Error("Missing Supabase secret API key");
+  }
+
+  return adminApiKey;
+}
+
+function isAuthorized(req: Request): boolean {
+  const apiKey = req.headers.get("apikey");
+  return !!apiKey && getSecretApiKeys().includes(apiKey);
+}
+
 interface WebhookPayload {
   type: "INSERT";
   table: string;
@@ -103,6 +139,10 @@ function buildNotification(
 
 Deno.serve(async (req) => {
   try {
+    if (!isAuthorized(req)) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
+    }
+
     const payload = (await req.json()) as WebhookPayload;
     const { table, record } = payload;
     const programId = record.program_id as string | undefined;
@@ -113,7 +153,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      getAdminApiKey()
     );
 
     const info = await getCoachName(supabase, programId);

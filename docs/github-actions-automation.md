@@ -100,7 +100,7 @@ Add this as an **Environment secret** on both `preview` and `production`:
 
 | Secret | Why it exists |
 |--------|----------------|
-| `SUPABASE_SERVICE_ROLE_KEY` | Required by the web API route that sends client invites |
+| `SUPABASE_SERVICE_ROLE_KEY` | Required by server-side web API routes. Store a modern `sb_secret_*` key here even though the env var name is legacy. |
 
 This is intentionally environment-scoped so preview and production can diverge later without changing workflow code.
 

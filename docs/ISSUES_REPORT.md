@@ -208,13 +208,13 @@ Only `messages(program_id, created_at)` is indexed (line 67). As data grows, the
 
 ---
 
-### M10. Push notification trigger silently fails if service_role_key not configured
+### M10. Push notification trigger silently fails if API key is not configured
 
 **File:** `supabase/migrations/002_push_notification_triggers.sql:24,38`
 
-**What happens:** `notify_push()` reads the service role key via `current_setting('app.settings.service_role_key', true)`. The `true` parameter means it returns NULL silently if the setting doesn't exist. The Authorization header becomes `Bearer ` (empty token), and the Edge Function call returns 401. Push notifications fail with no error logged — coaches and clients never get notified of new messages, practices, or journey entries.
+**What happens:** The original `notify_push()` read the legacy service role key via `current_setting('app.settings.service_role_key', true)`. The `true` parameter meant it returned NULL silently if the setting didn't exist. The Authorization header became `Bearer ` (empty token), and the Edge Function call returned 401. Push notifications failed with no error logged — coaches and clients never got notified of new messages, practices, or journey entries.
 
-**Fix:** Either set `app.settings.service_role_key` in the database config (`ALTER DATABASE ... SET app.settings.service_role_key = '...'`), or add a guard in the function that raises a warning if the key is null.
+**Fix:** `supabase/migrations/004_issue_report_fixes.sql` added warning guards, and `supabase/migrations/005_push_secret_api_key.sql` moves the trigger to `app.settings.edge_function_api_key` with Supabase's modern `sb_secret_*` key sent via the `apikey` header.
 
 ---
 

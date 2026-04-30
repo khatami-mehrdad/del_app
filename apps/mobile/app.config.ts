@@ -43,6 +43,7 @@ const config: ExpoConfig = {
       "RECORD_AUDIO",
       "android.permission.RECORD_AUDIO",
       "android.permission.MODIFY_AUDIO_SETTINGS",
+      "android.permission.POST_NOTIFICATIONS",
       "android.permission.RECEIVE_BOOT_COMPLETED",
     ],
     intentFilters: [

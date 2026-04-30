@@ -34,11 +34,25 @@ export function subscribeToMessages(
         table: 'messages',
         filter: `program_id=eq.${programId}`,
       },
-      (payload) => {
+      async (payload) => {
         try {
           onInsert(MessageSchema.parse(payload.new));
-        } catch {
-          // Ignore malformed realtime payloads; the next fetch will re-validate rows.
+        } catch (error) {
+          const id = typeof payload.new.id === 'string' ? payload.new.id : null;
+          if (!id) {
+            console.warn('Ignoring malformed message realtime payload:', error);
+            return;
+          }
+
+          const { data } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+          if (data) {
+            onInsert(MessageSchema.parse(data));
+          }
         }
       }
     )

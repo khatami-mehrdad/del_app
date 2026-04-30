@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { Audio } from 'expo-av';
 import { colors, fonts } from '@/lib/theme';
 import { useAuth } from '@/lib/auth-context';
@@ -95,11 +96,17 @@ export default function MessagesScreen() {
   const coachName = program?.coach.full_name ?? 'your coach';
   const coachInitial = coachName.charAt(0).toUpperCase();
 
-  useEffect(() => {
-    if (program && user) {
-      void markMessagesRead(program.id, user.id);
-    }
-  }, [messages.length, program, user]);
+  // Only mark messages as read while the user is actively viewing this
+  // screen. Without the focus gate, the tab stays mounted in the background
+  // and every new INSERT would auto-mark-read instantly — defeating the
+  // unread-count badge on the tab bar.
+  useFocusEffect(
+    useCallback(() => {
+      if (program && user) {
+        void markMessagesRead(program.id, user.id);
+      }
+    }, [messages.length, program, user])
+  );
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });

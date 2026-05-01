@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, Text, StyleSheet, Alert } from 'react-native';
 import { Audio } from 'expo-av';
 import { colors, fonts } from '@/lib/theme';
 
@@ -28,26 +28,49 @@ export function VoiceNotePlayer({ url, duration, variant = 'onLight' }: Props) {
 
   async function togglePlay() {
     if (playing && soundRef.current) {
-      await soundRef.current.stopAsync();
-      await soundRef.current.unloadAsync();
+      try {
+        await soundRef.current.stopAsync();
+      } catch {
+        // ignore
+      }
+      try {
+        await soundRef.current.unloadAsync();
+      } catch {
+        // ignore
+      }
       soundRef.current = null;
       setPlaying(false);
       return;
     }
     try {
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false, playsInSilentModeIOS: true });
-      const { sound } = await Audio.Sound.createAsync({ uri: url });
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldDuckAndroid: true,
+      });
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: url },
+        { shouldPlay: true }
+      );
       soundRef.current = sound;
       sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
+        if (!status.isLoaded) {
+          if ('error' in status && status.error) {
+            console.warn('Voice note playback error:', status.error);
+          }
+          return;
+        }
+        if (status.didJustFinish) {
           setPlaying(false);
-          sound.unloadAsync();
+          void sound.unloadAsync();
           soundRef.current = null;
         }
       });
-      await sound.playAsync();
       setPlaying(true);
-    } catch {
+    } catch (err: any) {
+      console.warn('Voice note playback failed:', err?.message ?? err, 'url:', url);
+      Alert.alert('Cannot play voice note', err?.message ?? 'Unknown error');
       setPlaying(false);
     }
   }

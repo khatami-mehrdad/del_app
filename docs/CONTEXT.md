@@ -14,15 +14,27 @@
 
 ## Current web app shape
 
-The web app is a coach dashboard, not a marketing site.
+The web app serves both the coach dashboard and the client PWA.
 
 Main routes today:
+
+**Coach dashboard:**
 
 - `/`: dashboard home for authenticated coach users
 - `/clients/[id]`: client detail dashboard
 - `/login`, `/forgot-password`, `/reset-password`: auth screens
 - `/auth/callback`: Supabase auth callback handler
-- `/client-invite`: invite landing page (also target of iOS Universal Links / Android App Links)
+
+**Client PWA (`/app/*`):**
+
+- `/app`: client home — greeting, weekly streak, practice card, daily check-in
+- `/app/messages`: messaging with coach (text + voice notes, realtime)
+- `/app/journey`: journey map entries with progress bar
+- `/app/login`: client sign-in page
+
+**Shared routes:**
+
+- `/client-invite`: invite landing page (sets up password, redirects to `/app`)
 - `/privacy`: privacy policy page
 - `/delete-account`: account deletion contact page
 - `/.well-known/apple-app-site-association` and `/.well-known/assetlinks.json`: universal/app link association files served from env
@@ -31,6 +43,15 @@ Main routes today:
 - `/api/client-status`, `/api/resend-invite`, `/api/delete-client`: client management endpoints
 
 There is no public landing page yet.
+
+### PWA infrastructure
+
+The client app is a Progressive Web App:
+
+- `public/manifest.json`: PWA manifest (standalone display, portrait, Del branding)
+- `public/sw.js`: service worker for offline caching of `/app` routes
+- Root layout registers the service worker and exposes Apple web app meta tags
+- Clients can "Add to Home Screen" for a native-like experience
 
 ## Auth and data flow
 

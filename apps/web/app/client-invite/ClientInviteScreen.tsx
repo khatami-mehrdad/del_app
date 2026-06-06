@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
-import QRCode from "qrcode";
 import { supabase } from "@/lib/supabase";
 
 type Phase = "loading" | "launching" | "password" | "done" | "error";
@@ -168,8 +167,8 @@ export function ClientInviteScreen() {
           <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">Del</p>
           <p className="mb-3 font-serif text-xl font-light text-white">Welcome to Del</p>
           <p className="mb-8 font-sans text-sm font-extralight leading-relaxed text-white/45">
-            Your coach has invited you. Set up your password here, then download and sign
-            into the companion app.
+            Your coach has invited you. Set up your password here, then open the
+            companion app and sign in.
           </p>
           <div className="space-y-3">
             <button
@@ -209,8 +208,8 @@ export function ClientInviteScreen() {
 
           <form onSubmit={handleSetPassword} className="space-y-4">
             <p className="text-center font-sans text-sm font-extralight leading-relaxed text-white/45">
-              Set your password here, then open the companion app and sign in with the
-              same email.
+              Set your password below, then sign into the companion app with your
+              email and this password.
             </p>
 
             <input
@@ -273,82 +272,33 @@ export function ClientInviteScreen() {
   );
 }
 
-// ── Done screen with QR code for desktop → phone handoff ──
-
-function getIsMobile() {
-  if (typeof navigator === "undefined") return false;
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
-
-function useIsMobile() {
-  // Safe for SSR: returns false on server, real value on client.
-  return useMemo(() => getIsMobile(), []);
-}
-
 function DoneScreen({ onSignOut }: { onSignOut: () => void }) {
-  const apkUrl = process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL;
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const isMobile = useIsMobile();
-
-  useEffect(() => {
-    if (apkUrl) {
-      QRCode.toDataURL(apkUrl, {
-        width: 200,
-        margin: 2,
-        color: { dark: "#1C1410", light: "#FFFFFF" },
-      }).then(setQrDataUrl).catch(() => {});
-    }
-  }, [apkUrl]);
+  const router = useRouter();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#1C1410] px-6">
       <p className="mb-2 font-serif text-3xl font-light italic text-gold-light">Del</p>
       <p className="mb-3 font-serif text-xl font-light text-white">Your account is ready</p>
 
-      {isMobile ? (
-        <>
-          <p className="max-w-sm text-center font-sans text-sm font-extralight leading-relaxed text-white/45">
-            Download the companion app, install it, and sign in with your
-            email and the password you just created.
-          </p>
-          {apkUrl ? (
-            <a
-              href={apkUrl}
-              className="mt-8 block w-72 rounded-full bg-gold px-8 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
-            >
-              Download the app
-            </a>
-          ) : null}
-        </>
-      ) : (
-        <>
-          <p className="max-w-sm text-center font-sans text-sm font-extralight leading-relaxed text-white/45">
-            Scan this QR code with your phone camera to download the companion
-            app. Then open it and sign in with your email and the password you
-            just created.
-          </p>
-          {qrDataUrl ? (
-            <div className="mt-8 rounded-2xl bg-white p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={qrDataUrl} alt="Scan to download the app" width={200} height={200} />
-            </div>
-          ) : apkUrl ? (
-            <a
-              href={apkUrl}
-              className="mt-8 block w-72 rounded-full bg-gold px-8 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
-            >
-              Download the app
-            </a>
-          ) : null}
-        </>
-      )}
+      <p className="max-w-sm text-center font-sans text-sm font-extralight leading-relaxed text-white/45">
+        You&apos;re all set! Open the companion app to start your journey with
+        your coach.
+      </p>
+
+      <button
+        type="button"
+        onClick={() => router.push("/app")}
+        className="mt-8 block w-72 rounded-full bg-gold px-8 py-3 text-center font-sans text-xs font-light uppercase tracking-[0.2em] text-white hover:bg-gold-light"
+      >
+        Open companion app
+      </button>
 
       <button
         type="button"
         onClick={() => void onSignOut()}
-        className="mt-6 w-72 rounded-full border border-white/15 px-8 py-3 font-sans text-xs font-light uppercase tracking-[0.2em] text-white/85 hover:border-gold/50"
+        className="mt-4 w-72 rounded-full border border-white/15 px-8 py-3 font-sans text-xs font-light uppercase tracking-[0.2em] text-white/85 hover:border-gold/50"
       >
-        Sign out on web
+        Sign out
       </button>
     </div>
   );

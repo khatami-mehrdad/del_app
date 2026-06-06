@@ -1,11 +1,11 @@
 {
-  "name": "Del — Companion",
+  "name": "Del",
   "short_name": "Del",
   "description": "Your therapeutic coaching companion by Sahar Shams",
-  "start_url": "/app",
-  "scope": "/app",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#F7F2EA",
+  "background_color": "#1C1410",
   "theme_color": "#2A1A0E",
   "orientation": "portrait",
   "icons": [

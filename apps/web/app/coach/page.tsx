@@ -14,7 +14,7 @@ export default function DashboardHome() {
   useEffect(() => {
     if (!loading && clients.length > 0 && !hasRedirected.current) {
       hasRedirected.current = true;
-      router.replace(`/clients/${clients[0].program.id}`);
+      router.replace(`/coach/clients/${clients[0].program.id}`);
     }
   }, [clients, loading, router]);
 

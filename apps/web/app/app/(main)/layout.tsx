@@ -11,7 +11,7 @@ function ClientGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/app/login");
+      router.replace("/login");
     }
   }, [user, loading, router]);
 
@@ -37,7 +37,7 @@ function ClientGuard({ children }: { children: React.ReactNode }) {
         </p>
         <button
           type="button"
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/coach")}
           className="rounded-full bg-brown px-8 py-3 font-sans text-xs font-light uppercase tracking-[0.2em] text-white transition-colors hover:bg-brown-mid"
         >
           Go to dashboard

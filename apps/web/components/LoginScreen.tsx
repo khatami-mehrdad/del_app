@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/lib/supabase";
+import { fetchProfile } from "@del/data";
 
 export function LoginScreen() {
   const router = useRouter();
@@ -42,7 +44,17 @@ export function LoginScreen() {
         if (result.error) {
           setError(result.error);
         } else {
-          router.replace("/");
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const profile = await fetchProfile(supabase, user.id);
+            if (profile?.role === "client") {
+              router.replace("/app");
+            } else {
+              router.replace("/coach");
+            }
+          } else {
+            router.replace("/coach");
+          }
         }
       } else {
         const result = await signUp(email.trim(), password, fullName.trim());
@@ -100,10 +112,10 @@ export function LoginScreen() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
           <h1 className="font-serif italic text-3xl font-light text-gold-light mb-1">
-            Del
+            del
           </h1>
           <p className="font-sans font-extralight text-[10px] tracking-[0.3em] uppercase text-white/20">
-            Coach Dashboard
+            Sign in to continue
           </p>
         </div>
 

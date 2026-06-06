@@ -14,23 +14,26 @@
 
 ## Current web app shape
 
-The web app serves both the coach dashboard and the client PWA.
+The web app is a unified portal serving both the coach dashboard and the client companion as PWAs. Users land on a branded page, sign in once, and are auto-routed by role.
 
 Main routes today:
 
-**Coach dashboard:**
+**Landing and auth:**
 
-- `/`: dashboard home for authenticated coach users
-- `/clients/[id]`: client detail dashboard
-- `/login`, `/forgot-password`, `/reset-password`: auth screens
+- `/`: branded landing page with "Sign in" CTA
+- `/login`, `/forgot-password`, `/reset-password`: shared auth screens (single login, auto-routes by role)
 - `/auth/callback`: Supabase auth callback handler
+
+**Coach dashboard (`/coach/*`):**
+
+- `/coach`: dashboard home (redirects to first client or "Add a client")
+- `/coach/clients/[id]`: client detail — check-ins, practice, journey, messages
 
 **Client PWA (`/app/*`):**
 
 - `/app`: client home — greeting, weekly streak, practice card, daily check-in
 - `/app/messages`: messaging with coach (text + voice notes, realtime)
 - `/app/journey`: journey map entries with progress bar
-- `/app/login`: client sign-in page
 
 **Shared routes:**
 
@@ -42,32 +45,32 @@ Main routes today:
 - `/api/ensure-profile`: repairs a missing profile row for an authenticated user when auth metadata has a valid role
 - `/api/client-status`, `/api/resend-invite`, `/api/delete-client`: client management endpoints
 
-There is no public landing page yet.
-
 ### PWA infrastructure
 
-The client app is a Progressive Web App:
+Both coach and client portals are Progressive Web Apps:
 
-- `public/manifest.json`: PWA manifest (standalone display, portrait, Del branding)
-- `public/sw.js`: service worker for offline caching of `/app` routes
+- `public/manifest.json`: PWA manifest (standalone display, scope `/`, covers both portals)
+- `public/sw.js`: service worker for offline caching
 - Root layout registers the service worker and exposes Apple web app meta tags
-- Clients can "Add to Home Screen" for a native-like experience
+- Both coaches and clients can "Add to Home Screen" for a native-like experience
+- Coach dashboard is responsive: sidebar on desktop, slide-out drawer on mobile
 
 ## Auth and data flow
 
-- Client auth state is managed in `apps/web/lib/auth-context.tsx`
+- Coach auth state is managed in `apps/web/lib/auth-context.tsx`
+- Client auth state is managed in `apps/web/app/app/components/ClientAuthProvider.tsx`
 - Browser Supabase client is created in `apps/web/lib/supabase.ts` with Supabase SSR
   cookie storage so Next proxy can read authenticated sessions
-- `apps/web/proxy.ts` redirects unauthenticated `/` and `/clients/*` requests to `/login`
-- Dashboard pages are wrapped by `apps/web/app/(dashboard)/layout.tsx`
-- The dashboard guard redirects unauthenticated users to `/login`
+- `apps/web/proxy.ts` redirects unauthenticated `/coach/*` and `/app/*` requests to `/login`
+- Coach pages are wrapped by `apps/web/app/coach/layout.tsx` (role guard: coach only)
+- Client pages are wrapped by `apps/web/app/app/(main)/layout.tsx` (role guard: client only)
+- After login, `LoginScreen` fetches the user profile and redirects to `/coach` or `/app` based on role
 
 Important behavior:
 
-- The redirect from `/` or `/clients/*` to `/login` now happens in middleware before dashboard HTML is served
-- `DashboardGuard` remains as a client-side role/profile guard after the middleware session check
-
-This supersedes the older blank-root behavior described below.
+- The redirect from protected routes to `/login` happens in the proxy before page HTML is served
+- Layout guards remain as client-side role checks after the proxy session check
+- `/` is a public landing page; no auth redirect occurs there
 
 ## Vercel finding on 2026-04-07
 

@@ -30,16 +30,30 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
+  const path = request.nextUrl.pathname;
+
+  // Coach dashboard routes: require auth
+  if (path.startsWith("/coach")) {
+    if (!user) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/login";
+      redirectUrl.searchParams.set("next", path);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  // Client PWA protected routes: require auth
+  if (path === "/app" || path.startsWith("/app/")) {
+    if (!user) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/login";
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/", "/clients/:path*"],
+  matcher: ["/coach/:path*", "/app/:path*"],
 };

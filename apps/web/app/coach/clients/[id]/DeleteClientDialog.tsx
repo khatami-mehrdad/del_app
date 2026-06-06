@@ -19,7 +19,7 @@ export function DeleteClientDialog({ clientName, clientId, onClose }: Props) {
     try {
       const result = await deleteClient(clientId);
       if (result.ok) {
-        router.replace("/");
+        router.replace("/coach");
         return;
       }
       alert(result.message);

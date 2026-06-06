@@ -1,5 +1,5 @@
-const CACHE_NAME = "del-pwa-v1";
-const STATIC_ASSETS = ["/app", "/manifest.json"];
+const CACHE_NAME = "del-pwa-v2";
+const STATIC_ASSETS = ["/", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -21,9 +21,9 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
 
-  if (url.pathname.startsWith("/app")) {
+  if (url.pathname.startsWith("/app") || url.pathname.startsWith("/coach")) {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match("/app"))
+      fetch(event.request).catch(() => caches.match("/"))
     );
     return;
   }

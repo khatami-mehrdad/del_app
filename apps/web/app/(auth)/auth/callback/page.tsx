@@ -27,7 +27,7 @@ export default function AuthCallbackPage() {
       routed.current = true;
 
       if (role === "coach") {
-        router.replace("/");
+        router.replace("/coach");
         return;
       }
 

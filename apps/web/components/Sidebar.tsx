@@ -57,7 +57,7 @@ export function Sidebar() {
             return (
               <Link
                 key={item.program.id}
-                href={`/clients/${item.program.id}`}
+                href={`/coach/clients/${item.program.id}`}
                 className={`flex items-center gap-3 px-7 py-3.5 transition-colors ${
                   activeId === item.program.id
                     ? "bg-gold/10"

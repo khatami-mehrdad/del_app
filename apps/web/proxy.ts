@@ -26,29 +26,30 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const path = request.nextUrl.pathname;
+  const hasAuthCookies = request.cookies.getAll().some((c) => c.name.startsWith("sb-"));
 
-  // Coach dashboard routes: require auth
-  if (path.startsWith("/coach")) {
-    if (!user) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/login";
-      redirectUrl.searchParams.set("next", path);
-      return NextResponse.redirect(redirectUrl);
-    }
+  // If auth cookies exist, attempt to refresh the session (sets new cookies
+  // on the response) and let the request through regardless of whether
+  // getUser succeeds — the client-side guards handle expired sessions
+  // gracefully without a hard redirect.
+  if (hasAuthCookies) {
+    await supabase.auth.getUser();
+    return response;
   }
 
-  // Client PWA protected routes: require auth
+  // No auth cookies at all — redirect to login
+  if (path.startsWith("/coach")) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/login";
+    redirectUrl.searchParams.set("next", path);
+    return NextResponse.redirect(redirectUrl);
+  }
+
   if (path === "/app" || path.startsWith("/app/")) {
-    if (!user) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/login";
-      return NextResponse.redirect(redirectUrl);
-    }
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/login";
+    return NextResponse.redirect(redirectUrl);
   }
 
   return response;
